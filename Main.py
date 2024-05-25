@@ -1,9 +1,14 @@
 from tkinter import *
 import tkinter.font as tkFont
 import random
+import Product
+import Store
 
 W_WIDTH = 1000
 W_HEIGHT = 800
+
+product_dic = Product.LoadAllProduct()
+store_dic = Store.LoadAllStore()
 
 class MainGUI:
     def __init__(self):
@@ -12,7 +17,6 @@ class MainGUI:
 
         Title_font = tkFont.Font(family="와구리체 TTF", size=25)
         Subtitle_font = tkFont.Font(family="UhBee Seulvely", size=15)
-        print(tkFont.families())
 
         try:
             with open('list.txt', 'r', encoding='utf-8') as fp:

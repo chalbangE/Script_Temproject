@@ -42,15 +42,7 @@ def LoadAllProduct():
             goodTotalDivCode=item.findtext("goodTotalDivCode")
         )
 
-        if temp.goodId:
-            products_map[temp.goodId] = temp
+        if temp.goodName:
+            products_map[temp.goodName] = temp
 
     return products_map
-
-
-# LoadAllProduct 함수를 호출하여 products_map을 가져오기
-products_map = LoadAllProduct()
-
-# 맵 출력
-# for goodId, product in products_map.items():
-#     print(product)

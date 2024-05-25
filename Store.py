@@ -36,7 +36,7 @@ def LoadAllStore():
     stores_map = {}  # goodId를 키로 갖는 Product들의 맵
 
     for item in root.iter("iros.openapi.service.vo.entpInfoVO"):
-        temp = Product(
+        temp = Store(
             entpId=item.findtext("entpId"),
             entpName=item.findtext("entpName"),
             entpTypeCode=item.findtext("entpTypeCode"),
@@ -52,15 +52,9 @@ def LoadAllStore():
             yMapCoord=item.findtext("yMapCoord")
         )
 
-        if temp.entpId:
-            stores_map[temp.entpId] = temp
+        if temp.entpName:
+            stores_map[temp.entpName] = temp
 
     return stores_map
 
 
-# LoadAllProduct 함수를 호출하여 products_map을 가져오기
-stores_map = LoadAllStore()
-
-# 맵 출력
-for entpId, store in stores_map.items():
-    print(store)
