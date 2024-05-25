@@ -21,10 +21,8 @@ class Product:
 
 def LoadAllProduct():
     url = 'http://openapi.price.go.kr/openApiImpl/ProductPriceInfoService/getProductInfoSvc.do?ServiceKey=bgABaHDCI6aMWSF9LIrvGAVSXbmEl193MNFLDhw%2Bndhs2%2F%2BTJ%2BPIq9J2DUn12Ei05O7fTEuSWxePGK8a7qfD0A%3D%3D'
-    service_key = "bgABaHDCI6aMWSF9LIrvGAVSXbmEl193MNFLDhw+ndhs2/+TJ+PIq9J2DUn12Ei05O7fTEuSWxePGK8a7qfD0A=="
 
-    queryParams = {'serviceKey': service_key}  # API 요청 파라미터 설정
-    response = requests.get(url, params=queryParams)  # API 호출 및 응답 받기
+    response = requests.get(url)  # API 호출 및 응답 받기
     # print(response.text)
     root = ET.fromstring(response.text)  # XML 응답 파싱
 
@@ -46,3 +44,37 @@ def LoadAllProduct():
             products_map[temp.goodName] = temp
 
     return products_map
+
+
+# 상품 단위 구분 코드, 상품 용량 구분 코드
+def LoadUnitDivCode():
+    url = 'http://openapi.price.go.kr/openApiImpl/ProductPriceInfoService/getStandardInfoSvc.do'
+    service_key = "bgABaHDCI6aMWSF9LIrvGAVSXbmEl193MNFLDhw+ndhs2/+TJ+PIq9J2DUn12Ei05O7fTEuSWxePGK8a7qfD0A=="
+
+    code_map = {}
+
+    queryParams = {'serviceKey': service_key, 'classCode': 'UT'}
+    response = requests.get(url, params=queryParams)
+    root = ET.fromstring(response.text)
+
+    for item in root.iter("iros.openapi.service.vo.stdInfoVO"):
+        code_map[item.findtext("code")] = item.findtext("codeName")
+
+    return code_map
+
+
+# 상품 소분류 코드
+def LoadTotalDivCode():
+    url = 'http://openapi.price.go.kr/openApiImpl/ProductPriceInfoService/getStandardInfoSvc.do'
+    service_key = "bgABaHDCI6aMWSF9LIrvGAVSXbmEl193MNFLDhw+ndhs2/+TJ+PIq9J2DUn12Ei05O7fTEuSWxePGK8a7qfD0A=="
+
+    code_map = {}
+
+    queryParams = {'serviceKey': service_key, 'classCode': 'AL'}
+    response = requests.get(url, params=queryParams)
+    root = ET.fromstring(response.text)
+
+    for item in root.iter("iros.openapi.service.vo.stdInfoVO"):
+        code_map[item.findtext("code")] = item.findtext("codeName")
+
+    return code_map
