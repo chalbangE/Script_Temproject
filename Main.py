@@ -10,6 +10,12 @@ W_HEIGHT = 800
 product_dic = Product.LoadAllProduct()
 store_dic = Store.LoadAllStore()
 
+p_unit_code_dic = Product.LoadUnitDivCode()         # 상품 단위 구분 코드 (병, 캔, 컵, 개...)
+p_total_code_dic = Product.LoadTotalDivCode()       # 상품 소분류 코드 (살충제, 세탁세제...)
+s_area_code = Store.LoadAreaCode()                  # 업체 업태 코드 (편의점, 백화점...)
+s_area_detail_code = Store.LoadAreaDetailCode()     # 업체 지역 코드 (서울, 광주...)
+
+
 class MainGUI:
     def __init__(self):
         window = Tk()
