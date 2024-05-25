@@ -2,6 +2,7 @@ import xml.etree.ElementTree as ET
 
 import requests
 
+
 class Store:
     def __init__(self, entpId=None, entpName=None, entpTypeCode=None, entpAreaCode=None, areaDetailCode=None,
                  entpTelno=None, postNo=None, plmkAddrBasic=None, plmkAddrDetail=None, roadAddrBasic=None,
@@ -26,10 +27,8 @@ class Store:
 
 def LoadAllStore():
     url = 'http://openapi.price.go.kr/openApiImpl/ProductPriceInfoService/getStoreInfoSvc.do?ServiceKey=bgABaHDCI6aMWSF9LIrvGAVSXbmEl193MNFLDhw%2Bndhs2%2F%2BTJ%2BPIq9J2DUn12Ei05O7fTEuSWxePGK8a7qfD0A%3D%3D'
-    service_key = "bgABaHDCI6aMWSF9LIrvGAVSXbmEl193MNFLDhw+ndhs2/+TJ+PIq9J2DUn12Ei05O7fTEuSWxePGK8a7qfD0A=="
 
-    queryParams = {'serviceKey': service_key}  # API 요청 파라미터 설정
-    response = requests.get(url, params=queryParams)  # API 호출 및 응답 받기
+    response = requests.get(url)  # API 호출 및 응답 받기
     # print(response.text)
     root = ET.fromstring(response.text)  # XML 응답 파싱
 
@@ -58,3 +57,35 @@ def LoadAllStore():
     return stores_map
 
 
+# 업체 업태 코드
+def LoadAreaCode():
+    url = 'http://openapi.price.go.kr/openApiImpl/ProductPriceInfoService/getStandardInfoSvc.do'
+    service_key = "bgABaHDCI6aMWSF9LIrvGAVSXbmEl193MNFLDhw+ndhs2/+TJ+PIq9J2DUn12Ei05O7fTEuSWxePGK8a7qfD0A=="
+
+    code_map = {}
+
+    queryParams = {'serviceKey': service_key, 'classCode': 'BU'}
+    response = requests.get(url, params=queryParams)
+    root = ET.fromstring(response.text)
+
+    for item in root.iter("iros.openapi.service.vo.stdInfoVO"):
+        code_map[item.findtext("code")] = item.findtext("codeName")
+
+    return code_map
+
+
+# 업체 지역 코드
+def LoadAreaDetailCode():
+    url = 'http://openapi.price.go.kr/openApiImpl/ProductPriceInfoService/getStandardInfoSvc.do'
+    service_key = "bgABaHDCI6aMWSF9LIrvGAVSXbmEl193MNFLDhw+ndhs2/+TJ+PIq9J2DUn12Ei05O7fTEuSWxePGK8a7qfD0A=="
+
+    code_map = {}
+
+    queryParams = {'serviceKey': service_key, 'classCode': 'AR'}
+    response = requests.get(url, params=queryParams)
+    root = ET.fromstring(response.text)
+
+    for item in root.iter("iros.openapi.service.vo.stdInfoVO"):
+        code_map[item.findtext("code")] = item.findtext("codeName")
+
+    return code_map
