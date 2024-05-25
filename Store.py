@@ -2,8 +2,7 @@ import xml.etree.ElementTree as ET
 
 import requests
 
-
-class Product:
+class Store:
     def __init__(self, entpId=None, entpName=None, entpTypeCode=None, entpAreaCode=None, areaDetailCode=None,
                  entpTelno=None, postNo=None, plmkAddrBasic=None, plmkAddrDetail=None, roadAddrBasic=None,
                  roadAddrDetail=None, xMapCoord=None, yMapCoord=None):
