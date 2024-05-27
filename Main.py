@@ -162,8 +162,14 @@ class MainGUI:
 
             # 표 추가
             tree = ttk.Treeview(frame, columns=("Item", "Value"), show='headings')
-            tree.heading("Item", text="Item")
-            tree.heading("Value", text="Value")
+            style = ttk.Style()
+            style.configure("Treeview", font=Basic_font)
+            style = ttk.Style()
+            style.configure("Treeview.Heading", font=Basic_font)
+            tree.heading("Item", text="Item", anchor=tk.CENTER)
+            tree.heading("Value", text="Value", anchor=tk.CENTER)
+            tree.column("Item", anchor="center")
+            tree.column("Value", anchor="center")
             for item, value in data["table"]:
                 tree.insert("", "end", values=(item, value))
             tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
