@@ -83,10 +83,10 @@ def CalAveragePrice(goodInspectDay=None, goodId=None):
     url = 'http://openapi.price.go.kr/openApiImpl/ProductPriceInfoService/getProductPriceInfoSvc.do'
     service_key = "bgABaHDCI6aMWSF9LIrvGAVSXbmEl193MNFLDhw+ndhs2/+TJ+PIq9J2DUn12Ei05O7fTEuSWxePGK8a7qfD0A=="
 
-    queryParams = {'serviceKey': service_key, 'goodInspectDay': goodInspectDay, 'goodId': goodId}
+    queryParams = {'serviceKey': service_key, 'goodInspectDay': goodInspectDay, 'entpId': None, 'goodId': goodId}
 
     response = requests.get(url, params=queryParams)
-    print(response.text)
+    # print(response.text)
 
     root = ET.fromstring(response.text)
 
@@ -96,6 +96,9 @@ def CalAveragePrice(goodInspectDay=None, goodId=None):
         average += int(item.findtext("goodPrice"))
         cnt += 1
 
-    return average // cnt
+    if cnt == 0:
+        return 0
+    else:
+        return average // cnt
 
-# print(CalAveragePrice("20220805", "1182"))
+# print(CalAveragePrice("20240524", "50"))

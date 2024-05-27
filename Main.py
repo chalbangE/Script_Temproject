@@ -51,6 +51,16 @@ def get_one_month_earlier(date_str):
     one_month_earlier = input_date - relativedelta(months=1)
     return one_month_earlier.strftime('%Y%m%d')
 
+def print_product_info(goodid):
+    print('goodid', product_dic[goodid].goodId)
+    print('goodName', product_dic[goodid].goodName)
+    print('goodUnitDivCode', product_dic[goodid].goodUnitDivCode)
+    print('goodBaseCnt', product_dic[goodid].goodBaseCnt)
+    print('goodSmlclsCode', product_dic[goodid].goodSmlclsCode)
+    print('detailMean', product_dic[goodid].detailMean)
+    print('goodTotalCnt', product_dic[goodid].goodTotalCnt)
+    print('goodTotalDivCode', product_dic[goodid].goodTotalDivCode)
+
 class GIF:
     def __init__(self, window, x, y, width, height):
         self.gif = Image.open("gif/cat2.gif")
@@ -121,24 +131,28 @@ class MainGUI:
         table_data = []
         graph_data = []
 
-        for goodId, product in product_dic.items():
-            if product.goodSmlclsCode == tab_dic[tab_text]:
-                p_this_week = Product.CalAveragePrice(self.this_week, goodId)
-                p_two_weeks_ago = Product.CalAveragePrice(self.two_weeks_ago, goodId)
-                p_a_year_ago = Product.CalAveragePrice(self.a_year_ago, goodId)
+        for goodName, product in product_dic.items():
+            if int(product.goodSmlclsCode) // 1000 * 1000 == int(tab_dic[tab_text]):
+                p_this_week = Product.CalAveragePrice(self.this_week, product.goodId)
+                if p_this_week == 0:
+                    continue
+                print_product_info(goodName)
+                print(self.this_week, goodName)
+                p_two_weeks_ago = Product.CalAveragePrice(self.two_weeks_ago, product.goodId)
+                p_a_year_ago = Product.CalAveragePrice(self.a_year_ago, product.goodId)
 
-                table_data.append(product.goodName)                                                 # 상품명
+                table_data.append(goodName)                                                 # 상품명
                 table_data.append(product.goodBaseCnt + p_unit_code_dic[product.goodUnitDivCode])   # 상품단위
 
                 table_data.append(p_this_week)
                 table_data.append(p_two_weeks_ago)
                 table_data.append(p_a_year_ago)
 
-                p_a_month_ago = Product.CalAveragePrice(self.a_month_ago)
-                p_two_months_ago = Product.CalAveragePrice(self.two_months_ago)
-                p_three_months_ago = Product.CalAveragePrice(self.three_months_ago)
-                p_four_months_ago = Product.CalAveragePrice(self.four_months_ago)
-                p_five_months_ago = Product.CalAveragePrice(self.five_months_ago)
+                p_a_month_ago = Product.CalAveragePrice(self.a_month_ago, product.goodId)
+                p_two_months_ago = Product.CalAveragePrice(self.two_months_ago, product.goodId)
+                p_three_months_ago = Product.CalAveragePrice(self.three_months_ago, product.goodId)
+                p_four_months_ago = Product.CalAveragePrice(self.four_months_ago, product.goodId)
+                p_five_months_ago = Product.CalAveragePrice(self.five_months_ago, product.goodId)
 
                 graph_data.append(p_five_months_ago)
                 graph_data.append(p_four_months_ago)
@@ -147,13 +161,28 @@ class MainGUI:
                 graph_data.append(p_a_month_ago)
                 graph_data.append(p_this_week)
 
+                # print(product.goodName)
+                # print(product.goodBaseCnt + p_unit_code_dic[product.goodUnitDivCode])
+                # print()
+                # print(p_this_week)
+                # print(p_two_weeks_ago)
+                # print(p_a_year_ago)
+                # print()
+                # print(p_five_months_ago)
+                # print(p_four_months_ago)
+                # print(p_three_months_ago)
+                # print(p_two_months_ago)
+                # print(p_a_month_ago)
+                # print(p_this_week)
+
 
         return {"table": table_data, "graph": graph_data}
 
     def on_tab_change(self, event):
         selected_tab = event.widget.select()
         tab_text = self.notebook.tab(selected_tab, "text")
-        random_data = self.load_weekly_price_info(tab_text)
+        data = self.load_weekly_price_info(tab_text)
+        # print(tab_text)
 
         frame = self.notebook.nametowidget(selected_tab)
         for widget in frame.winfo_children():
@@ -166,7 +195,7 @@ class MainGUI:
         tree.heading("금주", text="금주")
         tree.heading("2주전", text="2주전")
         tree.heading("1년전", text="1년전")
-        for item, value in random_data["table"]:
+        for item, value in data["table"]:
             tree.insert("", "end", values=(item, value))
         tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
@@ -180,7 +209,7 @@ class MainGUI:
 
         # 그래프 추가
         fig, ax = plt.subplots()
-        ax.plot(random_data["graph"], marker='o')
+        ax.plot(data["graph"], marker='o')
         ax.set_xticks(range(len(self.labels)))
         ax.set_xticklabels(self.labels, fontproperties="Malgun Gothic")
         ax.set_title('월간 그래프', fontproperties="Malgun Gothic")
