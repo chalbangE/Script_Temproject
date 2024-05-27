@@ -101,4 +101,4 @@ def CalAveragePrice(goodInspectDay=None, goodId=None):
     else:
         return average // cnt
 
-# print(CalAveragePrice("20240524", "50"))
+# print(CalAveragePrice("20220729", "168"))

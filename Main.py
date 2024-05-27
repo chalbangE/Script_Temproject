@@ -21,13 +21,16 @@ p_total_code_dic = Product.LoadTotalDivCode()       # 상품 소분류 코드 (�
 s_area_code = Store.LoadAreaCode()                  # 업체 업태 코드 (편의점, 백화점...)
 s_area_detail_code = Store.LoadAreaDetailCode()     # 업체 지역 코드 (서울, 광주...)
 
-def get_last_friday():
-    today = datetime.date.today()
-    today_weekday = today.weekday()
-    days_since_friday = (today_weekday - 4) % 7
+
+def get_last_friday(date_str):
+    # today = datetime.date.today()
+
+    input_date = datetime.datetime.strptime(date_str, '%Y%m%d')
+    input_weekday = input_date.weekday()
+    days_since_friday = (input_weekday - 4) % 7
     if days_since_friday == 0:
         days_since_friday = 7
-    last_friday = today - datetime.timedelta(days=days_since_friday)
+    last_friday = input_date - datetime.timedelta(days=days_since_friday)
     return last_friday.strftime('%Y%m%d')
 
 
@@ -130,23 +133,34 @@ class MainGUI:
         }
         table_data = []
         graph_data = []
+        product_cnt = 0
+        temp = []
 
         for goodName, product in product_dic.items():
             if int(product.goodSmlclsCode) // 1000 * 1000 == int(tab_dic[tab_text]):
                 p_this_week = Product.CalAveragePrice(self.this_week, product.goodId)
+
+                # print(self.this_week, product.goodId)
                 if p_this_week == 0:
                     continue
-                print_product_info(goodName)
-                print(self.this_week, goodName)
+                product_cnt += 1
+                if product_cnt == 4:
+                    break
+                # print_product_info(goodName)
+
                 p_two_weeks_ago = Product.CalAveragePrice(self.two_weeks_ago, product.goodId)
                 p_a_year_ago = Product.CalAveragePrice(self.a_year_ago, product.goodId)
 
-                table_data.append(goodName)                                                 # 상품명
-                table_data.append(product.goodBaseCnt + p_unit_code_dic[product.goodUnitDivCode])   # 상품단위
+                temp.append(goodName)                                                 # 상품명
+                temp.append(product.goodBaseCnt + p_unit_code_dic[product.goodUnitDivCode])   # 상품단위
 
-                table_data.append(p_this_week)
-                table_data.append(p_two_weeks_ago)
-                table_data.append(p_a_year_ago)
+                temp.append(p_this_week)
+                temp.append(p_two_weeks_ago)
+                temp.append(p_a_year_ago)
+
+                table_data.append(temp.copy())
+                print(table_data)
+                temp.clear()
 
                 p_a_month_ago = Product.CalAveragePrice(self.a_month_ago, product.goodId)
                 p_two_months_ago = Product.CalAveragePrice(self.two_months_ago, product.goodId)
@@ -154,12 +168,15 @@ class MainGUI:
                 p_four_months_ago = Product.CalAveragePrice(self.four_months_ago, product.goodId)
                 p_five_months_ago = Product.CalAveragePrice(self.five_months_ago, product.goodId)
 
-                graph_data.append(p_five_months_ago)
-                graph_data.append(p_four_months_ago)
-                graph_data.append(p_three_months_ago)
-                graph_data.append(p_two_months_ago)
-                graph_data.append(p_a_month_ago)
-                graph_data.append(p_this_week)
+                temp.append(p_five_months_ago)
+                temp.append(p_four_months_ago)
+                temp.append(p_three_months_ago)
+                temp.append(p_two_months_ago)
+                temp.append(p_a_month_ago)
+                temp.append(p_this_week)
+
+                graph_data.append(temp.copy())
+                temp.clear()
 
                 # print(product.goodName)
                 # print(product.goodBaseCnt + p_unit_code_dic[product.goodUnitDivCode])
@@ -175,7 +192,7 @@ class MainGUI:
                 # print(p_a_month_ago)
                 # print(p_this_week)
 
-
+        print({"table": table_data, "graph": graph_data})
         return {"table": table_data, "graph": graph_data}
 
     def on_tab_change(self, event):
@@ -195,8 +212,9 @@ class MainGUI:
         tree.heading("금주", text="금주")
         tree.heading("2주전", text="2주전")
         tree.heading("1년전", text="1년전")
-        for item, value in data["table"]:
-            tree.insert("", "end", values=(item, value))
+        print(data["table"])
+        for good, unit, this, two, year in data["table"]:
+            tree.insert("", "end", values=(good, unit, this, two, year))
         tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         # 표의 너비 조정
@@ -221,9 +239,11 @@ class MainGUI:
         window = tk.Tk()
         window.title('오늘 할 일 : 장 보기')
 
-        self.today = datetime.date.today().strftime('%Y%m%d')
+        # self.today = datetime.date.today().strftime('%Y%m%d')
+        self.today = '20220805'
 
-        self.this_week = get_last_friday()
+        # self.this_week = get_last_friday(self.today)
+        self.this_week = self.today
         self.a_week_ago = get_one_week_earlier(self.today)
         self.two_weeks_ago = get_one_week_earlier(self.a_week_ago)
 
