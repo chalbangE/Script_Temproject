@@ -32,6 +32,8 @@ class GIF:
         self.label = tk.Label(window)
         self.label.place(x=x, y=y, width=width, height=height)  # 원하는 위치와 크기로 설정
 
+        self.animation_id = None
+
     def update_label(self, frame):
         gif_frame = self.gif_frames[frame]
         self.label.config(image=gif_frame)
@@ -41,9 +43,19 @@ class GIF:
         frame_count = len(self.gif_frames)
         self.update_label(current_frame)
         current_frame = (current_frame + 1) % frame_count
-        window.after(100, lambda: self.animate(window, current_frame))
+        self.animation_id = window.after(100, lambda: self.animate(window, current_frame))
+
+    def stop_animation(self, window):
+        if self.animation_id is not None:
+            window.after_cancel(self.animation_id)
+            self.animation_id = None
+
 
 class MainGUI:
+    def on_closing(self):
+        self.gif_instance.stop_animation(self.window)
+        self.window.destroy()
+
     def Dark_mod_button_click(self):
         if self.show_mod == 'black':
             self.show_mod = 'white'
@@ -102,8 +114,8 @@ class MainGUI:
         self.dark_mod_button = tk.Button(window, image=self.dark_mod_off_image, command=self.Dark_mod_button_click)
         self.dark_mod_button.place(x=180, y=15)
 
-        gif_instance = GIF(window, x=20, y=20, width=147, height=80)
-        gif_instance.animate(window)
+        self.gif_instance = GIF(window, x=20, y=20, width=147, height=80)
+        self.gif_instance.animate(window)
 
         ### 주간 가격정보 ###
         category_contents = {
@@ -150,10 +162,15 @@ class MainGUI:
         # Notebook을 Canvas에 추가
         self.canvas.create_window(W_WIDTH // 2, 250, window=notebook, width=W_WIDTH, height=W_HEIGHT // 3)
 
+        # 창 닫기 이벤트 처리
+        window.protocol("WM_DELETE_WINDOW", self.on_closing)
 
         ### 메인 루프 ###
+        self.window = window
         window.mainloop()
 
 
 
-MainGUI()
+
+if __name__ == "__main__":
+    app = MainGUI()
