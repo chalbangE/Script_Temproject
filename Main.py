@@ -60,6 +60,11 @@ class MainGUI:
             self.canvas.itemconfig("title", fill='white')
             self.canvas.itemconfig("background", fill='black')
 
+    def search(self):
+        query = self.text.get("1.0", "end-1c")  # 첫 번째 줄의 첫 번째 문자부터 마지막 줄의 마지막 문자까지의 텍스트 가져오기
+        print("검색어:", query)
+
+
     def __init__(self):
         window = tk.Tk()
         window.title('오늘 할 일 : 장 보기')
@@ -86,6 +91,16 @@ class MainGUI:
         else:
             self.canvas.create_text(W_WIDTH / 2, 75, tags="subtitle", text='엄마가 시킨 심부름 : ' + self.words[random.randint(0, len(self.words) - 1)]\
                             + ', '+ self.words[random.randint(0, len(self.words) - 1)] + ', '+ self.words[random.randint(0, len(self.words) - 1)], font=Subtitle_font)
+
+        ### 상품 검색창 ###
+        self.text = tk.Text(window, width=25, height=6)  # 너비와 높이를 지정할 수 있음
+        self.text.place(x=W_WIDTH - 250, y=15)
+
+        search_button_image = Image.open("img/search_cat.jpg")
+        search_button_image = ImageTk.PhotoImage(search_button_image)
+        search_button = tk.Button(window, image=search_button_image, command=self.search)
+        search_button.place(x=W_WIDTH - 100, y=15)
+
 
         ### 테마 ###
         self.show_mod = 'white'
