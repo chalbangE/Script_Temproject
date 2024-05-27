@@ -7,6 +7,8 @@ import Store
 from PIL import Image, ImageTk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import datetime
+from dateutil.relativedelta import relativedelta
 
 W_WIDTH = 1000
 W_HEIGHT = 800
@@ -19,6 +21,35 @@ p_total_code_dic = Product.LoadTotalDivCode()       # 상품 소분류 코드 (�
 s_area_code = Store.LoadAreaCode()                  # 업체 업태 코드 (편의점, 백화점...)
 s_area_detail_code = Store.LoadAreaDetailCode()     # 업체 지역 코드 (서울, 광주...)
 
+def get_last_friday():
+    today = datetime.date.today()
+    today_weekday = today.weekday()
+    days_since_friday = (today_weekday - 4) % 7
+    if days_since_friday == 0:
+        days_since_friday = 7
+    last_friday = today - datetime.timedelta(days=days_since_friday)
+    return last_friday.strftime('%Y%m%d')
+
+
+def get_one_week_earlier(date_str):
+    input_date = datetime.datetime.strptime(date_str, '%Y%m%d')
+    one_week_earlier = input_date - datetime.timedelta(days=7)
+    return one_week_earlier.strftime('%Y%m%d')
+
+
+def get_one_year_earlier(date_str):
+    input_date = datetime.datetime.strptime(date_str, '%Y%m%d')
+    try:
+        one_year_earlier = input_date.replace(year=input_date.year - 1)
+    except ValueError:
+        one_year_earlier = input_date.replace(year=input_date.year - 1, day=28)
+    return one_year_earlier.strftime('%Y%m%d')
+
+
+def get_one_month_earlier(date_str):
+    input_date = datetime.datetime.strptime(date_str, '%Y%m%d')
+    one_month_earlier = input_date - relativedelta(months=1)
+    return one_month_earlier.strftime('%Y%m%d')
 
 class GIF:
     def __init__(self, window, x, y, width, height):
@@ -76,10 +107,111 @@ class MainGUI:
         query = self.text.get("1.0", "end-1c")  # 첫 번째 줄의 첫 번째 문자부터 마지막 줄의 마지막 문자까지의 텍스트 가져오기
         print("검색어:", query)
 
+    def load_weekly_price_info(self, tab_text):
+        tab_dic = {
+            "곡물가공품": "030201000",
+            "축산물": "030101000",
+            "수산물": "030103000",
+            "채소류": "030102000",
+            "양념•소스류": "030204000",
+            "과자•빙과류": "030205000",
+            "차•음료•주류": "030206000",
+            "위생용품": "030301000"
+        }
+        table_data = []
+        graph_data = []
+
+        for goodId, product in product_dic.items():
+            if product.goodSmlclsCode == tab_dic[tab_text]:
+                p_this_week = Product.CalAveragePrice(self.this_week, goodId)
+                p_two_weeks_ago = Product.CalAveragePrice(self.two_weeks_ago, goodId)
+                p_a_year_ago = Product.CalAveragePrice(self.a_year_ago, goodId)
+
+                table_data.append(product.goodName)                                                 # 상품명
+                table_data.append(product.goodBaseCnt + p_unit_code_dic[product.goodUnitDivCode])   # 상품단위
+
+                table_data.append(p_this_week)
+                table_data.append(p_two_weeks_ago)
+                table_data.append(p_a_year_ago)
+
+                p_a_month_ago = Product.CalAveragePrice(self.a_month_ago)
+                p_two_months_ago = Product.CalAveragePrice(self.two_months_ago)
+                p_three_months_ago = Product.CalAveragePrice(self.three_months_ago)
+                p_four_months_ago = Product.CalAveragePrice(self.four_months_ago)
+                p_five_months_ago = Product.CalAveragePrice(self.five_months_ago)
+
+                graph_data.append(p_five_months_ago)
+                graph_data.append(p_four_months_ago)
+                graph_data.append(p_three_months_ago)
+                graph_data.append(p_two_months_ago)
+                graph_data.append(p_a_month_ago)
+                graph_data.append(p_this_week)
+
+
+        return {"table": table_data, "graph": graph_data}
+
+    def on_tab_change(self, event):
+        selected_tab = event.widget.select()
+        tab_text = self.notebook.tab(selected_tab, "text")
+        random_data = self.load_weekly_price_info(tab_text)
+
+        frame = self.notebook.nametowidget(selected_tab)
+        for widget in frame.winfo_children():
+            widget.destroy()
+
+        # 표 추가
+        tree = ttk.Treeview(frame, columns=("상품", "단위", "금주", "2주전", "1년전"), show='headings')
+        tree.heading("상품", text="상품")
+        tree.heading("단위", text="단위")
+        tree.heading("금주", text="금주")
+        tree.heading("2주전", text="2주전")
+        tree.heading("1년전", text="1년전")
+        for item, value in random_data["table"]:
+            tree.insert("", "end", values=(item, value))
+        tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        # 표의 너비 조정
+        tree.column("상품", width=200)  # "Item" 열의 너비 설정
+        tree.column("단위", width=100)  # "Value" 열의 너비 설정
+        tree.column("금주", width=100)  # "Value" 열의 너비 설정
+        tree.column("2주전", width=100)  # "Value" 열의 너비 설정
+        tree.column("1년전", width=100)  # "Value" 열의 너비 설정
+        tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        # 그래프 추가
+        fig, ax = plt.subplots()
+        ax.plot(random_data["graph"], marker='o')
+        ax.set_xticks(range(len(self.labels)))
+        ax.set_xticklabels(self.labels, fontproperties="Malgun Gothic")
+        ax.set_title('월간 그래프', fontproperties="Malgun Gothic")
+        graph_canvas = FigureCanvasTkAgg(fig, master=frame)
+        graph_canvas.draw()
+        graph_canvas.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
     def __init__(self):
         window = tk.Tk()
         window.title('오늘 할 일 : 장 보기')
+
+        self.today = datetime.date.today().strftime('%Y%m%d')
+
+        self.this_week = get_last_friday()
+        self.a_week_ago = get_one_week_earlier(self.today)
+        self.two_weeks_ago = get_one_week_earlier(self.a_week_ago)
+
+        self.a_year_ago = get_one_year_earlier(self.today)
+
+        self.a_month_ago = get_one_month_earlier(self.today)
+        self.two_months_ago = get_one_month_earlier(self.a_month_ago)
+        self.three_months_ago = get_one_month_earlier(self.two_months_ago)
+        self.four_months_ago = get_one_month_earlier(self.three_months_ago)
+        self.five_months_ago = get_one_month_earlier(self.four_months_ago)
+
+        self.labels = [self.five_months_ago[4]+self.five_months_ago[5]+"월",
+                       self.four_months_ago[4]+self.four_months_ago[5]+"월",
+                       self.three_months_ago[4]+self.three_months_ago[5]+"월",
+                       self.two_months_ago[4]+self.two_months_ago[5]+"월",
+                       self.a_month_ago[4]+self.a_month_ago[5]+"월",
+                       "현재"]
 
         ### 타이틀 ###
         Title_font = tkFont.Font(family="와구리체 TTF", size=30)
@@ -134,16 +266,17 @@ class MainGUI:
         self.gif_instance.animate(window)
 
         ### 주간 가격정보 ###
-        category_contents = {
-            "곡물가공품": {"table": [["A", 1], ["B", 2], ["C", 3]], "graph": [1, 2, 3]},
-            "축산물": {"table": [["X", 10], ["Y", 20], ["Z", 30]], "graph": [10, 20, 30]},
-            "수산물": {"table": [["M", 100], ["N", 200], ["O", 300]], "graph": [100, 200, 300]},
-            "채소류": {"table": [["I", 5], ["J", 15], ["K", 25]], "graph": [5, 15, 25]},
-            "양념•소스류": {"table": [["M", 100], ["N", 200], ["O", 300]], "graph": [100, 200, 300]},
-            "과자•빙과류": {"table": [["M", 100], ["N", 200], ["O", 300]], "graph": [100, 200, 300]},
-            "차•음료•주류": {"table": [["M", 100], ["N", 200], ["O", 300]], "graph": [100, 200, 300]},
-            "위생용품": {"table": [["M", 100], ["N", 200], ["O", 300]], "graph": [100, 200, 300]}
+        self.category_contents = {
+            "곡물가공품": {"table": [["A", 1], ["B", 2], ["C", 3]], "graph": [1, 2, 3], "labels": self.labels},
+            "축산물": {"table": [], "graph": [], "labels": self.labels},
+            "수산물": {"table": [], "graph": [], "labels": self.labels},
+            "채소류": {"table": [], "graph": [], "labels": self.labels},
+            "양념•소스류": {"table": [], "graph": [], "labels": self.labels},
+            "과자•빙과류": {"table": [], "graph": [], "labels": self.labels},
+            "차•음료•주류": {"table": [], "graph": [], "labels": self.labels},
+            "위생용품": {"table": [], "graph": [], "labels": self.labels}
         }
+
         # 스타일 설정
         style = ttk.Style()
         style.configure("TNotebook.Tab", borderwidth=1, padding=[5, 2])
@@ -153,36 +286,16 @@ class MainGUI:
                   font=[("selected", Basic_font), ("!selected", Basic_font)])
 
         # 노트북 위젯 생성
-        notebook = ttk.Notebook(window)
+        self.notebook = ttk.Notebook(window)
+        self.notebook.bind("<<NotebookTabChanged>>", self.on_tab_change)
 
         # 각 카테고리에 대한 탭과 프레임 생성
-        for category, data in category_contents.items():
-            frame = ttk.Frame(notebook)
-            notebook.add(frame, text=category)
-
-            # 표 추가
-            tree = ttk.Treeview(frame, columns=("Item", "Value"), show='headings')
-            style = ttk.Style()
-            style.configure("Treeview", font=Basic_font)
-            style = ttk.Style()
-            style.configure("Treeview.Heading", font=Basic_font)
-            tree.heading("Item", text="상품명", anchor=tk.CENTER)
-            tree.heading("Value", text="가격", anchor=tk.CENTER)
-            tree.column("Item", anchor="center")
-            tree.column("Value", anchor="center")
-            for item, value in data["table"]:
-                tree.insert("", "end", values=(item, value))
-            tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-
-            # 그래프 추가
-            fig, ax = plt.subplots()
-            ax.plot(data["graph"], marker='o')
-            graph_canvas = FigureCanvasTkAgg(fig, master=frame)
-            graph_canvas.draw()
-            graph_canvas.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+        for category, data in self.category_contents.items():
+            frame = ttk.Frame(self.notebook)
+            self.notebook.add(frame, text=category)
 
         # Notebook을 Canvas에 추가
-        self.canvas.create_window(W_WIDTH // 2, 250, window=notebook, width=W_WIDTH - 40, height=W_HEIGHT // 3)
+        self.canvas.create_window(W_WIDTH // 2, 250, window=self.notebook, width=W_WIDTH - 40, height=W_HEIGHT // 3)
 
         # 창 닫기 이벤트 처리
         window.protocol("WM_DELETE_WINDOW", self.on_closing)

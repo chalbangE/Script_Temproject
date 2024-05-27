@@ -30,14 +30,14 @@ def LoadAllProduct():
 
     for item in root.iter("item"):
         temp = Product(
-            goodId=item.findtext("goodId"),
-            goodName=item.findtext("goodName"),
-            goodUnitDivCode=item.findtext("goodUnitDivCode"),
-            goodBaseCnt=item.findtext("goodBaseCnt"),
-            goodSmlclsCode=item.findtext("goodSmlclsCode"),
-            detailMean=item.findtext("detailMean"),
-            goodTotalCnt=item.findtext("goodTotalCnt"),
-            goodTotalDivCode=item.findtext("goodTotalDivCode")
+            goodId=item.findtext("goodId"),                     # 상품아이디
+            goodName=item.findtext("goodName"),                 # 상품명
+            goodUnitDivCode=item.findtext("goodUnitDivCode"),   # 상품단위구분코드
+            goodBaseCnt=item.findtext("goodBaseCnt"),           # 상품단위량
+            goodSmlclsCode=item.findtext("goodSmlclsCode"),     # 상품소분류코드
+            detailMean=item.findtext("detailMean"),             # 상품설명상세
+            goodTotalCnt=item.findtext("goodTotalCnt"),         # 상품용량
+            goodTotalDivCode=item.findtext("goodTotalDivCode")  # 상품용량구분코드
         )
 
         if temp.goodName:
@@ -78,3 +78,24 @@ def LoadTotalDivCode():
         code_map[item.findtext("code")] = item.findtext("codeName")
 
     return code_map
+
+def CalAveragePrice(goodInspectDay=None, goodId=None):
+    url = 'http://openapi.price.go.kr/openApiImpl/ProductPriceInfoService/getProductPriceInfoSvc.do'
+    service_key = "bgABaHDCI6aMWSF9LIrvGAVSXbmEl193MNFLDhw+ndhs2/+TJ+PIq9J2DUn12Ei05O7fTEuSWxePGK8a7qfD0A=="
+
+    queryParams = {'serviceKey': service_key, 'goodInspectDay': goodInspectDay, 'goodId': goodId}
+
+    response = requests.get(url, params=queryParams)
+    print(response.text)
+
+    root = ET.fromstring(response.text)
+
+    average = 0
+    cnt = 0
+    for item in root.iter("iros.openapi.service.vo.goodPriceVO"):
+        average += int(item.findtext("goodPrice"))
+        cnt += 1
+
+    return average // cnt
+
+# print(CalAveragePrice("20220805", "1182"))
