@@ -166,8 +166,8 @@ class MainGUI:
             style.configure("Treeview", font=Basic_font)
             style = ttk.Style()
             style.configure("Treeview.Heading", font=Basic_font)
-            tree.heading("Item", text="Item", anchor=tk.CENTER)
-            tree.heading("Value", text="Value", anchor=tk.CENTER)
+            tree.heading("Item", text="상품명", anchor=tk.CENTER)
+            tree.heading("Value", text="가격", anchor=tk.CENTER)
             tree.column("Item", anchor="center")
             tree.column("Value", anchor="center")
             for item, value in data["table"]:
@@ -182,7 +182,7 @@ class MainGUI:
             graph_canvas.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
         # Notebook을 Canvas에 추가
-        self.canvas.create_window(W_WIDTH // 2, 250, window=notebook, width=W_WIDTH, height=W_HEIGHT // 3)
+        self.canvas.create_window(W_WIDTH // 2, 250, window=notebook, width=W_WIDTH - 40, height=W_HEIGHT // 3)
 
         # 창 닫기 이벤트 처리
         window.protocol("WM_DELETE_WINDOW", self.on_closing)
