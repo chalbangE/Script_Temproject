@@ -84,6 +84,7 @@ class MainGUI:
         ### 타이틀 ###
         Title_font = tkFont.Font(family="와구리체 TTF", size=30)
         Subtitle_font = tkFont.Font(family="UhBee Seulvely", size=15)
+        Basic_font = tkFont.Font(family="SUITE", size=12)
 
         try:
             with open('list.txt', 'r', encoding='utf-8') as fp:
@@ -148,8 +149,8 @@ class MainGUI:
         style.configure("TNotebook.Tab", borderwidth=1, padding=[5, 2])
         style.map("TNotebook.Tab",
                   background=[("selected", "#f0f0f0")],
-                  foreground=[("selected", "#000080")],  # 폰트 색상을 남색으로 설정
-                  font=[("selected", ('Helvetica', 10, 'bold'))])
+                  foreground=[("selected", "#000080"), ("!selected", "#808080")],  # 폰트 색상을 남색으로 설정, # 선택되지 않은 탭의 글꼴 색상을 회색으로 설정
+                  font=[("selected", Basic_font), ("!selected", Basic_font)])
 
         # 노트북 위젯 생성
         notebook = ttk.Notebook(window)
@@ -183,8 +184,6 @@ class MainGUI:
         ### 메인 루프 ###
         self.window = window
         window.mainloop()
-
-
 
 
 if __name__ == "__main__":
