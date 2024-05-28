@@ -92,15 +92,13 @@ def CalAveragePrice(goodInspectDay=None, goodId=None):
 
     # print(goodInspectDay, goodId)
 
-    average = 0
-    cnt = 0
+    price = []
     for item in root.iter("iros.openapi.service.vo.goodPriceVO"):
-        average += int(item.findtext("goodPrice"))
-        cnt += 1
+        price.append(int(item.findtext("goodPrice")))
 
-    if cnt == 0:
+    if len(price) == 0:
         return 0
     else:
-        return average // cnt
+        return sum(price) // len(price)
 
 # print(CalAveragePrice("20220729", "168"))
