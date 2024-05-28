@@ -27,6 +27,7 @@ def get_previous_month(month_str, cnt):
     previous_month = (month - cnt - 1) % 12 + 1
     return f"{previous_month:02d}"
 
+
 def get_last_friday(date_str):
     input_date = datetime.datetime.strptime(date_str, '%Y%m%d')
     input_weekday = input_date.weekday()
@@ -67,6 +68,7 @@ def print_product_info(goodid):
     print('detailMean', product_dic[goodid].detailMean)
     print('goodTotalCnt', product_dic[goodid].goodTotalCnt)
     print('goodTotalDivCode', product_dic[goodid].goodTotalDivCode)
+
 
 class GIF:
     def __init__(self, window, x, y, width, height):
@@ -227,16 +229,48 @@ class MainGUI:
         tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         # 그래프 추가
-        fig, ax = plt.subplots()
-        print(data["graph"][0])
-        ax.plot(data["graph"][0], marker='o')
-        ax.set_xticks(range(len(self.labels)))
-        ax.set_xticklabels(self.labels, fontproperties="Malgun Gothic")
-        ax.set_title('월간 그래프', fontproperties="Malgun Gothic")
-        fig.tight_layout(pad=3.0)  # tight_layout 사용
-        graph_canvas = FigureCanvasTkAgg(fig, master=frame)
-        graph_canvas.draw()
-        graph_canvas.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+        self.fig, self.ax = plt.subplots()
+        self.graph_data = data["graph"][0]
+        self.ax.plot(self.graph_data, marker='o')
+        self.ax.set_xticks(range(len(self.labels)))
+        self.ax.set_xticklabels(self.labels, fontproperties="Malgun Gothic")
+        self.ax.set_title('월간 그래프', fontproperties="Malgun Gothic")
+        self.fig.tight_layout(pad=3.0)  # tight_layout 사용
+        self.graph_canvas = FigureCanvasTkAgg(self.fig, master=frame)
+        self.graph_canvas.draw()
+        self.graph_canvas.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+
+        # 행 클릭 이벤트 바인딩
+        tree.bind("<ButtonRelease-1>", self.on_row_click)
+
+    def on_row_click(self, event):
+        selected_item = event.widget.selection()
+        if selected_item:
+            item_values = event.widget.item(selected_item[0], "values")
+            product_name = item_values[0]
+            print(f"Selected product: {product_name}")
+
+            product = product_dic[product_name]
+            self.update_graph(product.goodId)
+
+    def update_graph(self, goodId):
+        p_this_week = Product.CalAveragePrice(self.this_week, goodId)
+        p_a_month_ago = self.CalAveragePrice(self.a_month_ago, goodId)
+        p_two_months_ago = self.CalAveragePrice(self.two_months_ago, goodId)
+        p_three_months_ago = self.CalAveragePrice(self.three_months_ago, goodId)
+        p_four_months_ago = self.CalAveragePrice(self.four_months_ago, goodId)
+        p_five_months_ago = self.CalAveragePrice(self.five_months_ago, goodId)
+
+        self.graph_data = [p_five_months_ago, p_four_months_ago, p_three_months_ago, p_two_months_ago, p_a_month_ago,
+                           p_this_week]
+
+        self.ax.clear()
+        self.ax.plot(self.graph_data, marker='o')
+        self.ax.set_xticks(range(len(self.labels)))
+        self.ax.set_xticklabels(self.labels, fontproperties="Malgun Gothic")
+        self.ax.set_title('월간 그래프', fontproperties="Malgun Gothic")
+        self.fig.tight_layout(pad=3.0)  # tight_layout 사용
+        self.graph_canvas.draw()
 
     def __init__(self):
         window = tk.Tk()
@@ -257,11 +291,11 @@ class MainGUI:
 
         print(self.a_month_ago, self.two_months_ago, self.three_months_ago, self.four_months_ago, self.five_months_ago)
 
-        self.labels = [get_previous_month(self.today[4]+self.today[5], 5)+"월",
-                       get_previous_month(self.today[4]+self.today[5], 4)+"월",
-                       get_previous_month(self.today[4]+self.today[5], 3)+"월",
-                       get_previous_month(self.today[4]+self.today[5], 2)+"월",
-                       get_previous_month(self.today[4]+self.today[5], 1)+"월",
+        self.labels = [get_previous_month(self.today[4] + self.today[5], 5) + "월",
+                       get_previous_month(self.today[4] + self.today[5], 4) + "월",
+                       get_previous_month(self.today[4] + self.today[5], 3) + "월",
+                       get_previous_month(self.today[4] + self.today[5], 2) + "월",
+                       get_previous_month(self.today[4] + self.today[5], 1) + "월",
                        "현재"]
 
         ### 타이틀 ###
@@ -287,7 +321,6 @@ class MainGUI:
         else:
             self.canvas.create_text(W_WIDTH / 2, 75, tags="subtitle", text='엄마가 시킨 심부름 : ' + self.words[random.randint(0, len(self.words) - 1)]\
                             + ', '+ self.words[random.randint(0, len(self.words) - 1)] + ', '+ self.words[random.randint(0, len(self.words) - 1)], font=Subtitle_font)
-
         ### 상품 검색창 ###
         self.text = tk.Text(window, width=25, height=6)  # 너비와 높이를 지정할 수 있음
         self.text.place(x=W_WIDTH - 250, y=15)
@@ -296,7 +329,6 @@ class MainGUI:
         search_button_image = ImageTk.PhotoImage(search_button_image)
         search_button = tk.Button(window, image=search_button_image, command=self.search)
         search_button.place(x=W_WIDTH - 100, y=15)
-
 
         ### 테마 ###
         self.show_mod = 'white'
