@@ -202,7 +202,6 @@ class MainGUI:
         selected_tab = event.widget.select()
         tab_text = self.notebook.tab(selected_tab, "text")
         data = self.load_weekly_price_info(tab_text)
-        # print(tab_text)
 
         frame = self.notebook.nametowidget(selected_tab)
         for widget in frame.winfo_children():
@@ -215,33 +214,35 @@ class MainGUI:
         tree.heading("금주", text="금주")
         tree.heading("2주전", text="2주전")
         tree.heading("1년전", text="1년전")
-        # print(data["table"])
+
         for good, unit, this, two, year in data["table"]:
             tree.insert("", "end", values=(good, unit, this, two, year))
         tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         # 표의 너비 조정
-        tree.column("상품", width=200)  # "Item" 열의 너비 설정
-        tree.column("단위", width=100)  # "Value" 열의 너비 설정
-        tree.column("금주", width=100)  # "Value" 열의 너비 설정
-        tree.column("2주전", width=100)  # "Value" 열의 너비 설정
-        tree.column("1년전", width=100)  # "Value" 열의 너비 설정
+        tree.column("상품", width=200)
+        tree.column("단위", width=100)
+        tree.column("금주", width=100)
+        tree.column("2주전", width=100)
+        tree.column("1년전", width=100)
         tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        # 그래프 추가
-        self.fig, self.ax = plt.subplots()
-        self.graph_data = data["graph"][0]
-        self.ax.plot(self.graph_data, marker='o')
-        self.ax.set_xticks(range(len(self.labels)))
-        self.ax.set_xticklabels(self.labels, fontproperties="Malgun Gothic")
-        self.ax.set_title('월간 그래프', fontproperties="Malgun Gothic")
-        self.fig.tight_layout(pad=3.0)  # tight_layout 사용
-        self.graph_canvas = FigureCanvasTkAgg(self.fig, master=frame)
-        self.graph_canvas.draw()
-        self.graph_canvas.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+        # 그래프 프레임 추가
+        self.graph_frame = ttk.Frame(frame)
+        self.graph_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+
 
         # 행 클릭 이벤트 바인딩
         tree.bind("<ButtonRelease-1>", self.on_row_click)
+
+        # 첫 번째 행 선택하여 그래프 생성
+        first_item = tree.get_children()[0]
+        item_values = tree.item(first_item, "values")
+        product_name = item_values[0]
+        print(f"First product: {product_name}")
+
+        product = product_dic[product_name]
+        self.create_graph(product.goodId)
 
     def on_row_click(self, event):
         selected_item = event.widget.selection()
@@ -251,9 +252,9 @@ class MainGUI:
             print(f"Selected product: {product_name}")
 
             product = product_dic[product_name]
-            self.update_graph(product.goodId)
+            self.create_graph(product.goodId)
 
-    def update_graph(self, goodId):
+    def create_graph(self, goodId):
         p_this_week = Product.CalAveragePrice(self.this_week, goodId)
         p_a_month_ago = self.CalAveragePrice(self.a_month_ago, goodId)
         p_two_months_ago = self.CalAveragePrice(self.two_months_ago, goodId)
@@ -264,13 +265,20 @@ class MainGUI:
         self.graph_data = [p_five_months_ago, p_four_months_ago, p_three_months_ago, p_two_months_ago, p_a_month_ago,
                            p_this_week]
 
-        self.ax.clear()
+        # 기존 그래프 위젯 제거
+        for widget in self.graph_frame.winfo_children():
+            widget.destroy()
+
+        # 새 그래프 생성
+        self.fig, self.ax = plt.subplots(figsize=(10, 6))  # 그래프 크기 설정
         self.ax.plot(self.graph_data, marker='o')
         self.ax.set_xticks(range(len(self.labels)))
         self.ax.set_xticklabels(self.labels, fontproperties="Malgun Gothic")
         self.ax.set_title('월간 그래프', fontproperties="Malgun Gothic")
-        self.fig.tight_layout(pad=3.0)  # tight_layout 사용
+        self.fig.subplots_adjust(left=0.15)
+        self.graph_canvas = FigureCanvasTkAgg(self.fig, master=self.graph_frame)
         self.graph_canvas.draw()
+        self.graph_canvas.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
     def __init__(self):
         window = tk.Tk()
