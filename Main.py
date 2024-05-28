@@ -22,22 +22,25 @@ s_area_code = Store.LoadAreaCode()                  # 업체 업태 코드 (편�
 s_area_detail_code = Store.LoadAreaDetailCode()     # 업체 지역 코드 (서울, 광주...)
 
 
-def get_last_friday(date_str):
-    # today = datetime.date.today()
+def get_previous_month(month_str, cnt):
+    month = int(month_str)
+    previous_month = (month - cnt - 1) % 12 + 1
+    return f"{previous_month:02d}"
 
+def get_last_friday(date_str):
     input_date = datetime.datetime.strptime(date_str, '%Y%m%d')
     input_weekday = input_date.weekday()
     days_since_friday = (input_weekday - 4) % 7
-    if days_since_friday == 0:
-        days_since_friday = 7
+    if input_weekday == 4:  # 금요일이면
+        return input_date.strftime('%Y%m%d')
     last_friday = input_date - datetime.timedelta(days=days_since_friday)
     return last_friday.strftime('%Y%m%d')
 
 
-def get_one_week_earlier(date_str):
+def get_weeks_earlier(date_str, cnt):
     input_date = datetime.datetime.strptime(date_str, '%Y%m%d')
-    one_week_earlier = input_date - datetime.timedelta(days=7)
-    return one_week_earlier.strftime('%Y%m%d')
+    weeks_earlier = input_date - datetime.timedelta(weeks=cnt)
+    return weeks_earlier.strftime('%Y%m%d')
 
 
 def get_one_year_earlier(date_str):
@@ -49,10 +52,11 @@ def get_one_year_earlier(date_str):
     return one_year_earlier.strftime('%Y%m%d')
 
 
-def get_one_month_earlier(date_str):
+def get_months_earlier(date_str, cnt):
     input_date = datetime.datetime.strptime(date_str, '%Y%m%d')
-    one_month_earlier = input_date - relativedelta(months=1)
-    return one_month_earlier.strftime('%Y%m%d')
+    months_earlier = input_date - relativedelta(months=cnt)
+    return months_earlier.strftime('%Y%m%d')
+
 
 def print_product_info(goodid):
     print('goodid', product_dic[goodid].goodId)
@@ -120,6 +124,15 @@ class MainGUI:
         query = self.text.get("1.0", "end-1c")  # 첫 번째 줄의 첫 번째 문자부터 마지막 줄의 마지막 문자까지의 텍스트 가져오기
         print("검색어:", query)
 
+    def CalAveragePrice(self, goodInspectDay, goodId):
+        cnt = 0
+        while True:
+            result = Product.CalAveragePrice(goodInspectDay, goodId)
+            if result != 0:
+                return result
+            cnt += 1
+            goodInspectDay = get_weeks_earlier(goodInspectDay, 1)
+
     def load_weekly_price_info(self, tab_text):
         tab_dic = {
             "곡물가공품": "030201000",
@@ -144,12 +157,12 @@ class MainGUI:
                 if p_this_week == 0:
                     continue
                 product_cnt += 1
-                if product_cnt == 12:
+                if product_cnt == 6:
                     break
                 # print_product_info(goodName)
 
-                p_two_weeks_ago = Product.CalAveragePrice(self.two_weeks_ago, product.goodId)
-                p_a_year_ago = Product.CalAveragePrice(self.a_year_ago, product.goodId)
+                p_two_weeks_ago = self.CalAveragePrice(self.two_weeks_ago, product.goodId)
+                p_a_year_ago = self.CalAveragePrice(self.a_year_ago, product.goodId)
 
                 temp.append(goodName)                                                 # 상품명
                 temp.append(product.goodBaseCnt + p_unit_code_dic[product.goodUnitDivCode])   # 상품단위
@@ -162,11 +175,11 @@ class MainGUI:
                 # print(table_data)
                 temp.clear()
 
-                p_a_month_ago = Product.CalAveragePrice(self.a_month_ago, product.goodId)
-                p_two_months_ago = Product.CalAveragePrice(self.two_months_ago, product.goodId)
-                p_three_months_ago = Product.CalAveragePrice(self.three_months_ago, product.goodId)
-                p_four_months_ago = Product.CalAveragePrice(self.four_months_ago, product.goodId)
-                p_five_months_ago = Product.CalAveragePrice(self.five_months_ago, product.goodId)
+                p_a_month_ago = self.CalAveragePrice(self.a_month_ago, product.goodId)
+                p_two_months_ago = self.CalAveragePrice(self.two_months_ago, product.goodId)
+                p_three_months_ago = self.CalAveragePrice(self.three_months_ago, product.goodId)
+                p_four_months_ago = self.CalAveragePrice(self.four_months_ago, product.goodId)
+                p_five_months_ago = self.CalAveragePrice(self.five_months_ago, product.goodId)
 
                 temp.append(p_five_months_ago)
                 temp.append(p_four_months_ago)
@@ -176,23 +189,10 @@ class MainGUI:
                 temp.append(p_this_week)
 
                 graph_data.append(temp.copy())
+                # print(graph_data)
                 temp.clear()
 
-                # print(product.goodName)
-                # print(product.goodBaseCnt + p_unit_code_dic[product.goodUnitDivCode])
-                # print()
-                # print(p_this_week)
-                # print(p_two_weeks_ago)
-                # print(p_a_year_ago)
-                # print()
-                # print(p_five_months_ago)
-                # print(p_four_months_ago)
-                # print(p_three_months_ago)
-                # print(p_two_months_ago)
-                # print(p_a_month_ago)
-                # print(p_this_week)
-
-        print({"table": table_data, "graph": graph_data})
+        # print({"table": table_data, "graph": graph_data})
         return {"table": table_data, "graph": graph_data}
 
     def on_tab_change(self, event):
@@ -212,7 +212,7 @@ class MainGUI:
         tree.heading("금주", text="금주")
         tree.heading("2주전", text="2주전")
         tree.heading("1년전", text="1년전")
-        print(data["table"])
+        # print(data["table"])
         for good, unit, this, two, year in data["table"]:
             tree.insert("", "end", values=(good, unit, this, two, year))
         tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
@@ -227,7 +227,8 @@ class MainGUI:
 
         # 그래프 추가
         fig, ax = plt.subplots()
-        ax.plot(data["graph"], marker='o')
+        print(data["graph"][0])
+        ax.plot(data["graph"][0], marker='o')
         ax.set_xticks(range(len(self.labels)))
         ax.set_xticklabels(self.labels, fontproperties="Malgun Gothic")
         ax.set_title('월간 그래프', fontproperties="Malgun Gothic")
@@ -242,24 +243,23 @@ class MainGUI:
         # self.today = datetime.date.today().strftime('%Y%m%d')
         self.today = '20220805'
 
-        # self.this_week = get_last_friday(self.today)
-        self.this_week = self.today
-        self.a_week_ago = get_one_week_earlier(self.today)
-        self.two_weeks_ago = get_one_week_earlier(self.a_week_ago)
+        self.this_week = get_last_friday(self.today)
+        self.two_weeks_ago = get_weeks_earlier(self.today, 2)
+        self.a_year_ago = get_last_friday(get_one_year_earlier(self.today))
 
-        self.a_year_ago = get_one_year_earlier(self.today)
+        self.a_month_ago = get_last_friday(get_months_earlier(self.today, 1))
+        self.two_months_ago = get_last_friday(get_months_earlier(self.today, 2))
+        self.three_months_ago = get_last_friday(get_months_earlier(self.today, 3))
+        self.four_months_ago = get_last_friday(get_months_earlier(self.today, 4))
+        self.five_months_ago = get_last_friday(get_months_earlier(self.today, 5))
 
-        self.a_month_ago = get_one_month_earlier(self.today)
-        self.two_months_ago = get_one_month_earlier(self.a_month_ago)
-        self.three_months_ago = get_one_month_earlier(self.two_months_ago)
-        self.four_months_ago = get_one_month_earlier(self.three_months_ago)
-        self.five_months_ago = get_one_month_earlier(self.four_months_ago)
+        print(self.a_month_ago, self.two_months_ago, self.three_months_ago, self.four_months_ago, self.five_months_ago)
 
-        self.labels = [self.five_months_ago[4]+self.five_months_ago[5]+"월",
-                       self.four_months_ago[4]+self.four_months_ago[5]+"월",
-                       self.three_months_ago[4]+self.three_months_ago[5]+"월",
-                       self.two_months_ago[4]+self.two_months_ago[5]+"월",
-                       self.a_month_ago[4]+self.a_month_ago[5]+"월",
+        self.labels = [get_previous_month(self.today[4]+self.today[5], 5)+"월",
+                       get_previous_month(self.today[4]+self.today[5], 4)+"월",
+                       get_previous_month(self.today[4]+self.today[5], 3)+"월",
+                       get_previous_month(self.today[4]+self.today[5], 2)+"월",
+                       get_previous_month(self.today[4]+self.today[5], 1)+"월",
                        "현재"]
 
         ### 타이틀 ###
@@ -330,9 +330,10 @@ class MainGUI:
         style = ttk.Style()
         style.configure("TNotebook.Tab", borderwidth=1, padding=[5, 2])
         style.map("TNotebook.Tab",
-                  background=[("selected", "#f0f0f0")],
                   foreground=[("selected", "#000080"), ("!selected", "#808080")],  # 폰트 색상을 남색으로 설정, # 선택되지 않은 탭의 글꼴 색상을 회색으로 설정
                   font=[("selected", Basic_font), ("!selected", Basic_font)])
+
+        style.configure("Treeview", rowheight=40)  # 행 높이 설정
 
         # 노트북 위젯 생성
         self.notebook = ttk.Notebook(window)
