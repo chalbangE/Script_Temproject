@@ -175,22 +175,23 @@ class MainGUI:
                 # print(table_data)
                 temp.clear()
 
-                p_a_month_ago = self.CalAveragePrice(self.a_month_ago, product.goodId)
-                p_two_months_ago = self.CalAveragePrice(self.two_months_ago, product.goodId)
-                p_three_months_ago = self.CalAveragePrice(self.three_months_ago, product.goodId)
-                p_four_months_ago = self.CalAveragePrice(self.four_months_ago, product.goodId)
-                p_five_months_ago = self.CalAveragePrice(self.five_months_ago, product.goodId)
+                if len(graph_data) == 0:
+                    p_a_month_ago = self.CalAveragePrice(self.a_month_ago, product.goodId)
+                    p_two_months_ago = self.CalAveragePrice(self.two_months_ago, product.goodId)
+                    p_three_months_ago = self.CalAveragePrice(self.three_months_ago, product.goodId)
+                    p_four_months_ago = self.CalAveragePrice(self.four_months_ago, product.goodId)
+                    p_five_months_ago = self.CalAveragePrice(self.five_months_ago, product.goodId)
 
-                temp.append(p_five_months_ago)
-                temp.append(p_four_months_ago)
-                temp.append(p_three_months_ago)
-                temp.append(p_two_months_ago)
-                temp.append(p_a_month_ago)
-                temp.append(p_this_week)
+                    temp.append(p_five_months_ago)
+                    temp.append(p_four_months_ago)
+                    temp.append(p_three_months_ago)
+                    temp.append(p_two_months_ago)
+                    temp.append(p_a_month_ago)
+                    temp.append(p_this_week)
 
-                graph_data.append(temp.copy())
-                # print(graph_data)
-                temp.clear()
+                    graph_data.append(temp.copy())
+                    # print(graph_data)
+                    temp.clear()
 
         # print({"table": table_data, "graph": graph_data})
         return {"table": table_data, "graph": graph_data}
