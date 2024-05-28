@@ -232,6 +232,7 @@ class MainGUI:
         ax.set_xticks(range(len(self.labels)))
         ax.set_xticklabels(self.labels, fontproperties="Malgun Gothic")
         ax.set_title('월간 그래프', fontproperties="Malgun Gothic")
+        fig.tight_layout(pad=3.0)  # tight_layout 사용
         graph_canvas = FigureCanvasTkAgg(fig, master=frame)
         graph_canvas.draw()
         graph_canvas.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
