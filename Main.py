@@ -144,7 +144,7 @@ class MainGUI:
                 if p_this_week == 0:
                     continue
                 product_cnt += 1
-                if product_cnt == 4:
+                if product_cnt == 12:
                     break
                 # print_product_info(goodName)
 
@@ -159,7 +159,7 @@ class MainGUI:
                 temp.append(p_a_year_ago)
 
                 table_data.append(temp.copy())
-                print(table_data)
+                # print(table_data)
                 temp.clear()
 
                 p_a_month_ago = Product.CalAveragePrice(self.a_month_ago, product.goodId)

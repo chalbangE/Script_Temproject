@@ -90,6 +90,8 @@ def CalAveragePrice(goodInspectDay=None, goodId=None):
 
     root = ET.fromstring(response.text)
 
+    # print(goodInspectDay, goodId)
+
     average = 0
     cnt = 0
     for item in root.iter("iros.openapi.service.vo.goodPriceVO"):
