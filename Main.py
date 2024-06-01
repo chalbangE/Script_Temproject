@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import datetime
 from dateutil.relativedelta import relativedelta
+from tkintermapview import TkinterMapView
+
 
 W_WIDTH = 1000
 W_HEIGHT = 800
@@ -68,6 +70,7 @@ def print_product_info(goodid):
     print('detailMean', product_dic[goodid].detailMean)
     print('goodTotalCnt', product_dic[goodid].goodTotalCnt)
     print('goodTotalDivCode', product_dic[goodid].goodTotalDivCode)
+
 
 
 class GIF:
@@ -283,6 +286,17 @@ class MainGUI:
         self.graph_canvas.draw()
         self.graph_canvas.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
+    def search_location(self, event=None):
+        if not self.search_in_progress:
+            self.search_in_progress = True
+
+            address = self.map_entry.get("1.0", "end-1c")
+            self.search_marker = self.map_widget.set_address(address, marker=True)
+            if self.search_marker is False:
+                # address was invalid (return value is False)
+                self.search_marker = None
+            self.search_in_progress = False
+
     def __init__(self):
         window = tk.Tk()
         window.title('오늘 할 일 : 장 보기')
@@ -391,6 +405,24 @@ class MainGUI:
 
         # Notebook을 Canvas에 추가
         self.canvas.create_window(W_WIDTH // 2, 250, window=self.notebook, width=W_WIDTH - 40, height=W_HEIGHT // 3)
+
+        self.search_marker = None
+        self.search_in_progress = False
+        # 지도 위젯 생성 및 초기화
+        self.map_widget = TkinterMapView(window, width=W_WIDTH // 2 - 20, height=W_HEIGHT // 3, corner_radius=0)
+        self.map_widget.place(x=20, y=W_HEIGHT // 2)
+
+        # 초기 지도 위치 설정 (위도, 경도 및 줌 레벨)
+        self.map_widget.set_address("NYC")
+        self.map_widget.set_zoom(10)  # 줌 레벨
+
+        # 검색 입력 상자 생성
+        self.map_entry = tk.Text(window, width=55, height=3)  # 너비와 높이를 지정할 수 있음
+        self.map_entry.place(x=20, y=(W_HEIGHT // 2) + (W_HEIGHT // 3) + 10)
+
+        # 검색 버튼 생성
+        map_search_button = tk.Button(window, text="매장 검색", command=self.search_location)
+        map_search_button.place(x=W_WIDTH // 2 - 65, y=(W_HEIGHT // 2) + (W_HEIGHT // 3) + 10)
 
         # 창 닫기 이벤트 처리
         window.protocol("WM_DELETE_WINDOW", self.on_closing)
