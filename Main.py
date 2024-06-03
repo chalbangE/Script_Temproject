@@ -209,8 +209,12 @@ class MainGUI:
         for widget in frame.winfo_children():
             widget.destroy()
 
+        # 특정 스타일 이름을 사용하여 Treeview 스타일 설정
+        style = ttk.Style()
+        style.configure("Custom.Treeview", rowheight=40)  # 특정 스타일 이름으로 행 높이 설정
+
         # 표 추가
-        tree = ttk.Treeview(frame, columns=("상품", "단위", "금주", "2주전", "1년전"), show='headings')
+        tree = ttk.Treeview(frame, columns=("상품", "단위", "금주", "2주전", "1년전"), show='headings', style="Custom.Treeview")
         tree.heading("상품", text="상품")
         tree.heading("단위", text="단위")
         tree.heading("금주", text="금주")
@@ -233,18 +237,18 @@ class MainGUI:
         self.graph_frame = ttk.Frame(frame)
         self.graph_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
-
         # 행 클릭 이벤트 바인딩
         tree.bind("<ButtonRelease-1>", self.on_row_click)
 
         # 첫 번째 행 선택하여 그래프 생성
-        first_item = tree.get_children()[0]
-        item_values = tree.item(first_item, "values")
-        product_name = item_values[0]
-        print(f"First product: {product_name}")
+        if tree.get_children():
+            first_item = tree.get_children()[0]
+            item_values = tree.item(first_item, "values")
+            product_name = item_values[0]
+            print(f"First product: {product_name}")
 
-        product = product_dic[product_name]
-        self.create_graph(product.goodId)
+            product = product_dic[product_name]
+            self.create_graph(product.goodId)
 
     def on_row_click(self, event):
         selected_item = event.widget.selection()
@@ -332,14 +336,38 @@ class MainGUI:
 
         for key, store in store_dic.items():
             if store.entpAreaCode == area_key:
-                good_price = Product.getProductPriceInfoSvc(self.this_week, key, product_key)
-                if good_price != 0:
-                    stores_by_price[key] = good_price
+                good_price_info = Product.getProductPriceInfoSvc(self.this_week, key, product_key)
+                if good_price_info != 0:
+                    stores_by_price[key] = good_price_info
 
         sorted_stores_by_price = dict(sorted(stores_by_price.items(), key=lambda item: int(item[1].goodPrice)))
 
-        for k, v in sorted_stores_by_price.items():
-            print(k, v.goodPrice)
+        # 검색 결과를 출력할 프레임 생성
+        if self.results_frame is not None:
+            self.results_frame.destroy()
+
+        self.results_frame = ttk.Frame(self.window)
+        self.results_frame.place(x=295, y=575, width=315, height=212)
+
+        # Treeview 생성
+        style = ttk.Style()
+        style.configure("Treeview", rowheight=30)  # 특정 스타일 이름으로 행 높이 설정
+
+        columns = ("store_name", "price")
+        self.results_tree = ttk.Treeview(self.results_frame, columns=columns, show='headings', height=3)
+        self.results_tree.heading("store_name", text="판매점")
+        self.results_tree.heading("price", text="가격")
+
+        # Treeview 열 너비 설정
+        self.results_tree.column("store_name", width=150, anchor='center')
+        self.results_tree.column("price", width=150, anchor='center')
+
+        # Treeview에 정렬된 결과 추가
+        for store_id, price_info in sorted_stores_by_price.items():
+            store_name = store_dic[store_id].entpName
+            self.results_tree.insert("", "end", values=(store_name, price_info.goodPrice))
+
+        self.results_tree.pack(fill=tk.BOTH, expand=True)
 
         print(f"지역 key: {area_key}, 품목군 key: {category_key}, 품목 key: {item_key}, 상품 key: {product_key}")
 
@@ -461,13 +489,14 @@ class MainGUI:
 
         ### 내 지역 최저가 매장 ###
 
+        self.results_frame = None
         self.area_map = {v: k for k, v in s_area_detail_code.items() if int(k) % 100000 == 0}
         self.category_map = {v: k for k, v in p_total_code_dic.items() if int(k) % 1000 == 0 and int(k) % 10000 != 0}
         self.item_map = {}
         self.product_map = {}
 
         filter_frame = tk.Frame(self.canvas)
-        self.canvas.create_window(0, W_HEIGHT // 3 + 155, anchor="nw", window=filter_frame)
+        self.canvas.create_window(273, W_HEIGHT // 3 + 155, anchor="nw", window=filter_frame)
 
         # 스타일 설정
         style = ttk.Style()
@@ -479,20 +508,19 @@ class MainGUI:
         title_label.grid(row=0, column=0, columnspan=2, padx=20, pady=5, sticky="w")
 
         # 지역 콤보박스
-        self.area_combobox = ttk.Combobox(filter_frame, values=list(self.area_map.keys()), style='TCombobox', width=15)
+        self.area_combobox = ttk.Combobox(filter_frame, values=list(self.area_map.keys()), style='TCombobox', width=18)
         self.area_combobox.set("지역 선택")
-        self.area_combobox.grid(row=1, column=0, columnspan=2, padx=20, pady=5, sticky="ew")
+        self.area_combobox.grid(row=1, column=0, padx=(20, 5), pady=5, sticky="ew")
 
         # 품목군 콤보박스
-        self.category_combobox = ttk.Combobox(filter_frame, values=list(self.category_map.keys()), style='TCombobox',
-                                              width=15)
+        self.category_combobox = ttk.Combobox(filter_frame, values=list(self.category_map.keys()), style='TCombobox', width=18)
         self.category_combobox.set("품목군 선택")
-        self.category_combobox.grid(row=2, column=0, columnspan=2, padx=20, pady=5, sticky="ew")
+        self.category_combobox.grid(row=1, column=1, padx=(5, 20), pady=5, sticky="ew")
 
         # 품목 콤보박스
-        self.item_combobox = ttk.Combobox(filter_frame, values=[], style='TCombobox', width=15)  # 초기에는 빈 값
+        self.item_combobox = ttk.Combobox(filter_frame, values=[], style='TCombobox', width=18)  # 초기에는 빈 값
         self.item_combobox.set("품목 선택")
-        self.item_combobox.grid(row=3, column=0, columnspan=2, padx=20, pady=5, sticky="ew")
+        self.item_combobox.grid(row=2, column=0, padx=(20, 5), pady=5, sticky="ew")
 
         # 품목군 선택 이벤트 바인딩
         self.category_combobox.bind("<<ComboboxSelected>>", self.update_items)
@@ -501,21 +529,22 @@ class MainGUI:
         self.item_combobox.bind("<<ComboboxSelected>>", self.update_products)
 
         # 상품 콤보박스
-        self.product_combobox = ttk.Combobox(filter_frame, values=[], style='TCombobox', width=15)  # 초기에는 빈 값
+        self.product_combobox = ttk.Combobox(filter_frame, values=[], style='TCombobox', width=18)  # 초기에는 빈 값
         self.product_combobox.set("상품 선택")
-        self.product_combobox.grid(row=4, column=0, padx=(20, 5), pady=5, sticky="ew")
+        self.product_combobox.grid(row=2, column=1, padx=(5, 20), pady=5, sticky="ew")
 
         # 검색 버튼
-        self.search_button = ttk.Button(filter_frame, text="검색", command=self.search_lowest_price_store, style='TButton', width=6)
-        self.search_button.grid(row=4, column=1, padx=(5, 20), pady=5, sticky="ew")
+        self.search_button = ttk.Button(filter_frame, text="검색", command=self.search_lowest_price_store,
+                                        style='TButton', width=15)
+        self.search_button.grid(row=3, column=0, columnspan=2, padx=20, pady=5, sticky="ew")
 
         # 각 열의 가중치를 동일하게 설정하여 너비를 맞춤
         filter_frame.grid_columnconfigure(0, weight=1)
         filter_frame.grid_columnconfigure(1, weight=1)
 
         ### 지도 ###
-        self.map_widget = TkinterMapView(window, width=383, height=W_HEIGHT // 3, corner_radius=0)
-        self.map_widget.place(x=240, y=W_HEIGHT // 3 + 155)
+        self.map_widget = TkinterMapView(window, width=355, height=365, corner_radius=0)
+        self.map_widget.place(x=625, y=W_HEIGHT // 3 + 155)
 
         # 초기 지도 위치 설정 (위도, 경도 및 줌 레벨)
         self.map_widget.set_address("NYC")
@@ -528,6 +557,7 @@ class MainGUI:
         # 검색 버튼 생성
         map_search_button = tk.Button(window, text="매장 검색", command=self.search_location)
         map_search_button.place(x=W_WIDTH // 2 - 65, y=(W_HEIGHT // 3 + 155) + (W_HEIGHT // 3) + 10)
+
 
         # 창 닫기 이벤트 처리
         window.protocol("WM_DELETE_WINDOW", self.on_closing)
