@@ -32,7 +32,7 @@ def LoadAllStore():
     # print(response.text)
     root = ET.fromstring(response.text)  # XML 응답 파싱
 
-    stores_map = {}  # goodId를 키로 갖는 Product들의 맵
+    stores_map = {}  # entpName를 키로 갖는 Store들의 맵
 
     for item in root.iter("iros.openapi.service.vo.entpInfoVO"):
         temp = Store(

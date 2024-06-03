@@ -297,6 +297,44 @@ class MainGUI:
                 self.search_marker = None
             self.search_in_progress = False
 
+
+    def update_items(self, event):
+        selected_category = self.category_combobox.get()
+        selected_key = None
+
+        # 선택된 품목군의 key를 찾기
+        for k, v in p_total_code_dic.items():
+            if v == selected_category:
+                selected_key = k
+                break
+
+        if selected_key is not None:
+            # 천의자리수의 key를 갖는 value들을 품목 콤보박스에 설정
+            new_values = [v for k, v in p_total_code_dic.items() if int(k) // 1000 == int(selected_key) // 1000 and int(k) % 1000 != 0]
+            self.item_combobox['values'] = new_values
+
+    def update_products(self, event):
+        selected_item = self.item_combobox.get()
+        selected_key = None
+
+        # 선택된 품목의 key를 찾기
+        for k, v in p_total_code_dic.items():
+            if v == selected_item:
+                selected_key = k
+                break
+
+        if selected_key is not None:
+            # 선택된 품목의 key와 product_dic의 goodSmlclsCode가 같은 상품들을 상품 콤보박스에 설정
+            new_values = [product.goodName for product in product_dic.values() if product.goodSmlclsCode == selected_key]
+            self.product_combobox['values'] = new_values
+
+    def search(self):
+        selected_area = self.area_combobox.get()
+        selected_category = self.category_combobox.get()
+        selected_item = self.item_combobox.get()
+        selected_product = self.product_combobox.get()
+        print(f"지역: {selected_area}, 품목군: {selected_category}, 품목: {selected_item}, 상품: {selected_product}")
+
     def __init__(self):
         window = tk.Tk()
         window.title('오늘 할 일 : 장 보기')
@@ -425,39 +463,42 @@ class MainGUI:
         # map_search_button = tk.Button(window, text="매장 검색", command=self.search_location)
         # map_search_button.place(x=W_WIDTH // 2 - 65, y=(W_HEIGHT // 2) + (W_HEIGHT // 3) + 10)
 
-        # 콤보박스 스타일 설정
-        style.configure('TCombobox', padding=5, relief='flat', background='white')
-
-        # 버튼 스타일 설정 (별도의 이름으로 정의)
-        style.configure('TButton', padding=6, relief='solid', borderwidth=1, background='#ececec')
-
-        # 기존 코드 수정
-        ### 왼쪽 아래 부분에 검색 필터 추가 ###
+        ### 내 지역 최저가 매장 ###
         filter_frame = tk.Frame(self.canvas)
         self.canvas.create_window(40, W_HEIGHT // 3 + 250, anchor="nw", window=filter_frame)
+
+        # 스타일 설정
+        style = ttk.Style()
+        style.configure('TCombobox', padding=5, relief='flat', background='white')
+        style.configure('TButton', padding=6, relief='solid', borderwidth=1, background='#ececec')
 
         # 제목 라벨
         title_label = tk.Label(filter_frame, text="내 지역 최저가 매장", font=("와구리체 TTF", 16))
         title_label.grid(row=0, column=0, columnspan=2, padx=20, pady=10)
 
         # 지역 콤보박스
-        self.area_combobox = ttk.Combobox(filter_frame, values=list(s_area_detail_code.values()), style='TCombobox')
+        self.area_combobox = ttk.Combobox(filter_frame, values=[v for k, v in s_area_detail_code.items() if int(k) % 100000 == 0], style='TCombobox')
         self.area_combobox.set("지역 선택")
         self.area_combobox.grid(row=1, column=0, columnspan=2, padx=20, pady=10, sticky="ew")
 
         # 품목군 콤보박스
-        self.category_combobox = ttk.Combobox(filter_frame, values=list(p_total_code_dic.values()), style='TCombobox')
+        self.category_combobox = ttk.Combobox(filter_frame, values=[v for k, v in p_total_code_dic.items() if int(k) % 1000 == 0 and int(k) % 10000 != 0], style='TCombobox')
         self.category_combobox.set("품목군 선택")
         self.category_combobox.grid(row=2, column=0, columnspan=2, padx=20, pady=10, sticky="ew")
 
         # 품목 콤보박스
-        self.item_combobox = ttk.Combobox(filter_frame, values=["품목1", "품목2", "품목3"],
-                                          style='Custom.TCombobox')  # 여기에 실제 품목 데이터를 추가하세요.
+        self.item_combobox = ttk.Combobox(filter_frame, values=[], style='TCombobox')  # 초기에는 빈 값
         self.item_combobox.set("품목 선택")
         self.item_combobox.grid(row=3, column=0, columnspan=2, padx=20, pady=10, sticky="ew")
 
+        # 품목군 선택 이벤트 바인딩
+        self.category_combobox.bind("<<ComboboxSelected>>", self.update_items)
+
+        # 품목 선택 이벤트 바인딩
+        self.item_combobox.bind("<<ComboboxSelected>>", self.update_products)
+
         # 상품 콤보박스
-        self.product_combobox = ttk.Combobox(filter_frame, values=list(product_dic.keys()), style='TCombobox')
+        self.product_combobox = ttk.Combobox(filter_frame, values=[], style='TCombobox')  # 초기에는 빈 값
         self.product_combobox.set("상품 선택")
         self.product_combobox.grid(row=4, column=0, padx=20, pady=10, sticky="ew")
 
