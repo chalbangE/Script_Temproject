@@ -119,7 +119,7 @@ def getProductPriceInfoSvc(goodInspectDay=None, entpId=None, goodId=None):
     queryParams = {'serviceKey': service_key, 'goodInspectDay': goodInspectDay, 'entpId': entpId, 'goodId': goodId}
 
     response = requests.get(url, params=queryParams)
-    print(response.text)
+    # print(response.text)
 
     root = ET.fromstring(response.text)
 

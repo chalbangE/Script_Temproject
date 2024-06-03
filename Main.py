@@ -328,11 +328,18 @@ class MainGUI:
         item_key = self.item_map.get(selected_item)
         product_key = self.product_map.get(selected_product)
 
-        stores_in_area = {}
+        stores_by_price = {}
 
         for key, store in store_dic.items():
             if store.entpAreaCode == area_key:
-                stores_in_area[key] = store
+                good_price = Product.getProductPriceInfoSvc(self.this_week, key, product_key)
+                if good_price != 0:
+                    stores_by_price[key] = good_price
+
+        sorted_stores_by_price = dict(sorted(stores_by_price.items(), key=lambda item: int(item[1].goodPrice)))
+
+        for k, v in sorted_stores_by_price.items():
+            print(k, v.goodPrice)
 
         print(f"지역 key: {area_key}, 품목군 key: {category_key}, 품목 key: {item_key}, 상품 key: {product_key}")
 
