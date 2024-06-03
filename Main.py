@@ -442,7 +442,11 @@ class MainGUI:
             self.notebook.add(frame, text=category)
 
         # Notebook을 Canvas에 추가
-        self.canvas.create_window(W_WIDTH // 2, 250, window=self.notebook, width=W_WIDTH - 40, height=W_HEIGHT // 3)
+        self.canvas.create_window(W_WIDTH // 2, 280, window=self.notebook, width=W_WIDTH - 40, height=W_HEIGHT // 3)
+
+        # 주간 가격정보 제목 추가
+        weekly_price_label = tk.Label(window, text="주간 가격정보", font=("와구리체 TTF", 16), anchor="w")
+        self.canvas.create_window(20, 115, anchor="nw", window=weekly_price_label)
 
         self.search_marker = None
         self.search_in_progress = False
@@ -465,31 +469,35 @@ class MainGUI:
 
         ### 내 지역 최저가 매장 ###
         filter_frame = tk.Frame(self.canvas)
-        self.canvas.create_window(40, W_HEIGHT // 3 + 250, anchor="nw", window=filter_frame)
+        self.canvas.create_window(0, W_HEIGHT // 3 + 155, anchor="nw", window=filter_frame)
 
         # 스타일 설정
         style = ttk.Style()
         style.configure('TCombobox', padding=5, relief='flat', background='white')
-        style.configure('TButton', padding=6, relief='solid', borderwidth=1, background='#ececec')
+        style.configure('TButton', padding=(5, 3), relief='solid', borderwidth=1, background='#ececec')
 
         # 제목 라벨
         title_label = tk.Label(filter_frame, text="내 지역 최저가 매장", font=("와구리체 TTF", 16))
-        title_label.grid(row=0, column=0, columnspan=2, padx=20, pady=10)
+        title_label.grid(row=0, column=0, columnspan=2, padx=20, pady=5, sticky="w")
 
         # 지역 콤보박스
-        self.area_combobox = ttk.Combobox(filter_frame, values=[v for k, v in s_area_detail_code.items() if int(k) % 100000 == 0], style='TCombobox')
+        self.area_combobox = ttk.Combobox(filter_frame,
+                                          values=[v for k, v in s_area_detail_code.items() if int(k) % 100000 == 0],
+                                          style='TCombobox', width=15)
         self.area_combobox.set("지역 선택")
-        self.area_combobox.grid(row=1, column=0, columnspan=2, padx=20, pady=10, sticky="ew")
+        self.area_combobox.grid(row=1, column=0, columnspan=2, padx=20, pady=5, sticky="ew")
 
         # 품목군 콤보박스
-        self.category_combobox = ttk.Combobox(filter_frame, values=[v for k, v in p_total_code_dic.items() if int(k) % 1000 == 0 and int(k) % 10000 != 0], style='TCombobox')
+        self.category_combobox = ttk.Combobox(filter_frame, values=[v for k, v in p_total_code_dic.items() if
+                                                                    int(k) % 1000 == 0 and int(k) % 10000 != 0],
+                                              style='TCombobox', width=15)
         self.category_combobox.set("품목군 선택")
-        self.category_combobox.grid(row=2, column=0, columnspan=2, padx=20, pady=10, sticky="ew")
+        self.category_combobox.grid(row=2, column=0, columnspan=2, padx=20, pady=5, sticky="ew")
 
         # 품목 콤보박스
-        self.item_combobox = ttk.Combobox(filter_frame, values=[], style='TCombobox')  # 초기에는 빈 값
+        self.item_combobox = ttk.Combobox(filter_frame, values=[], style='TCombobox', width=15)  # 초기에는 빈 값
         self.item_combobox.set("품목 선택")
-        self.item_combobox.grid(row=3, column=0, columnspan=2, padx=20, pady=10, sticky="ew")
+        self.item_combobox.grid(row=3, column=0, columnspan=2, padx=20, pady=5, sticky="ew")
 
         # 품목군 선택 이벤트 바인딩
         self.category_combobox.bind("<<ComboboxSelected>>", self.update_items)
@@ -498,13 +506,13 @@ class MainGUI:
         self.item_combobox.bind("<<ComboboxSelected>>", self.update_products)
 
         # 상품 콤보박스
-        self.product_combobox = ttk.Combobox(filter_frame, values=[], style='TCombobox')  # 초기에는 빈 값
+        self.product_combobox = ttk.Combobox(filter_frame, values=[], style='TCombobox', width=15)  # 초기에는 빈 값
         self.product_combobox.set("상품 선택")
-        self.product_combobox.grid(row=4, column=0, padx=20, pady=10, sticky="ew")
+        self.product_combobox.grid(row=4, column=0, padx=(20, 5), pady=5, sticky="ew")
 
         # 검색 버튼
-        self.search_button = ttk.Button(filter_frame, text="검색", command=self.search, style='TButton')
-        self.search_button.grid(row=4, column=1, padx=(0, 20), pady=10, sticky="ew")
+        self.search_button = ttk.Button(filter_frame, text="검색", command=self.search, style='TButton', width=6)
+        self.search_button.grid(row=4, column=1, padx=(5, 20), pady=5, sticky="ew")
 
         # 각 열의 가중치를 동일하게 설정하여 너비를 맞춤
         filter_frame.grid_columnconfigure(0, weight=1)
