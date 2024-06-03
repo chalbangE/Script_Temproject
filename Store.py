@@ -51,8 +51,8 @@ def LoadAllStore():
             yMapCoord=item.findtext("yMapCoord")
         )
 
-        if temp.entpName:
-            stores_map[temp.entpName] = temp
+        if temp.entpId:
+            stores_map[temp.entpId] = temp
 
     return stores_map
 

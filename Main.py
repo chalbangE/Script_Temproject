@@ -297,43 +297,44 @@ class MainGUI:
                 self.search_marker = None
             self.search_in_progress = False
 
-
     def update_items(self, event):
         selected_category = self.category_combobox.get()
-        selected_key = None
+        selected_key = self.category_map.get(selected_category)
 
-        # 선택된 품목군의 key를 찾기
-        for k, v in p_total_code_dic.items():
-            if v == selected_category:
-                selected_key = k
-                break
-
-        if selected_key is not None:
-            # 천의자리수의 key를 갖는 value들을 품목 콤보박스에 설정
-            new_values = [v for k, v in p_total_code_dic.items() if int(k) // 1000 == int(selected_key) // 1000 and int(k) % 1000 != 0]
-            self.item_combobox['values'] = new_values
+        if selected_key:
+            new_items = {v: k for k, v in p_total_code_dic.items() if
+                         int(k) // 1000 == int(selected_key) // 1000 and int(k) % 1000 != 0}
+            self.item_map = new_items
+            self.item_combobox['values'] = list(new_items.keys())
 
     def update_products(self, event):
         selected_item = self.item_combobox.get()
-        selected_key = None
+        selected_key = self.item_map.get(selected_item)
 
-        # 선택된 품목의 key를 찾기
-        for k, v in p_total_code_dic.items():
-            if v == selected_item:
-                selected_key = k
-                break
+        if selected_key:
+            new_products = {product.goodName: product.goodId for product in product_dic.values() if
+                            product.goodSmlclsCode == selected_key}
+            self.product_map = new_products
+            self.product_combobox['values'] = list(new_products.keys())
 
-        if selected_key is not None:
-            # 선택된 품목의 key와 product_dic의 goodSmlclsCode가 같은 상품들을 상품 콤보박스에 설정
-            new_values = [product.goodName for product in product_dic.values() if product.goodSmlclsCode == selected_key]
-            self.product_combobox['values'] = new_values
-
-    def search(self):
+    def search_lowest_price_store(self):
         selected_area = self.area_combobox.get()
         selected_category = self.category_combobox.get()
         selected_item = self.item_combobox.get()
         selected_product = self.product_combobox.get()
-        print(f"지역: {selected_area}, 품목군: {selected_category}, 품목: {selected_item}, 상품: {selected_product}")
+
+        area_key = self.area_map.get(selected_area)
+        category_key = self.category_map.get(selected_category)
+        item_key = self.item_map.get(selected_item)
+        product_key = self.product_map.get(selected_product)
+
+        stores_in_area = {}
+
+        for key, store in store_dic.items():
+            if store.entpAreaCode == area_key:
+                stores_in_area[key] = store
+
+        print(f"지역 key: {area_key}, 품목군 key: {category_key}, 품목 key: {item_key}, 상품 key: {product_key}")
 
     def __init__(self):
         window = tk.Tk()
@@ -451,23 +452,13 @@ class MainGUI:
         self.search_marker = None
         self.search_in_progress = False
 
-        # ### 지도 ###
-        # self.map_widget = TkinterMapView(window, width=W_WIDTH // 2 - 20, height=W_HEIGHT // 3, corner_radius=0)
-        # self.map_widget.place(x=20, y=W_HEIGHT // 2)
-        #
-        # # 초기 지도 위치 설정 (위도, 경도 및 줌 레벨)
-        # self.map_widget.set_address("NYC")
-        # self.map_widget.set_zoom(10)  # 줌 레벨
-        #
-        # # 검색 입력 상자 생성
-        # self.map_entry = tk.Text(window, width=55, height=3)  # 너비와 높이를 지정할 수 있음
-        # self.map_entry.place(x=20, y=(W_HEIGHT // 2) + (W_HEIGHT // 3) + 10)
-        #
-        # # 검색 버튼 생성
-        # map_search_button = tk.Button(window, text="매장 검색", command=self.search_location)
-        # map_search_button.place(x=W_WIDTH // 2 - 65, y=(W_HEIGHT // 2) + (W_HEIGHT // 3) + 10)
-
         ### 내 지역 최저가 매장 ###
+
+        self.area_map = {v: k for k, v in s_area_detail_code.items() if int(k) % 100000 == 0}
+        self.category_map = {v: k for k, v in p_total_code_dic.items() if int(k) % 1000 == 0 and int(k) % 10000 != 0}
+        self.item_map = {}
+        self.product_map = {}
+
         filter_frame = tk.Frame(self.canvas)
         self.canvas.create_window(0, W_HEIGHT // 3 + 155, anchor="nw", window=filter_frame)
 
@@ -481,16 +472,13 @@ class MainGUI:
         title_label.grid(row=0, column=0, columnspan=2, padx=20, pady=5, sticky="w")
 
         # 지역 콤보박스
-        self.area_combobox = ttk.Combobox(filter_frame,
-                                          values=[v for k, v in s_area_detail_code.items() if int(k) % 100000 == 0],
-                                          style='TCombobox', width=15)
+        self.area_combobox = ttk.Combobox(filter_frame, values=list(self.area_map.keys()), style='TCombobox', width=15)
         self.area_combobox.set("지역 선택")
         self.area_combobox.grid(row=1, column=0, columnspan=2, padx=20, pady=5, sticky="ew")
 
         # 품목군 콤보박스
-        self.category_combobox = ttk.Combobox(filter_frame, values=[v for k, v in p_total_code_dic.items() if
-                                                                    int(k) % 1000 == 0 and int(k) % 10000 != 0],
-                                              style='TCombobox', width=15)
+        self.category_combobox = ttk.Combobox(filter_frame, values=list(self.category_map.keys()), style='TCombobox',
+                                              width=15)
         self.category_combobox.set("품목군 선택")
         self.category_combobox.grid(row=2, column=0, columnspan=2, padx=20, pady=5, sticky="ew")
 
@@ -511,12 +499,28 @@ class MainGUI:
         self.product_combobox.grid(row=4, column=0, padx=(20, 5), pady=5, sticky="ew")
 
         # 검색 버튼
-        self.search_button = ttk.Button(filter_frame, text="검색", command=self.search, style='TButton', width=6)
+        self.search_button = ttk.Button(filter_frame, text="검색", command=self.search_lowest_price_store, style='TButton', width=6)
         self.search_button.grid(row=4, column=1, padx=(5, 20), pady=5, sticky="ew")
 
         # 각 열의 가중치를 동일하게 설정하여 너비를 맞춤
         filter_frame.grid_columnconfigure(0, weight=1)
         filter_frame.grid_columnconfigure(1, weight=1)
+
+        ### 지도 ###
+        self.map_widget = TkinterMapView(window, width=383, height=W_HEIGHT // 3, corner_radius=0)
+        self.map_widget.place(x=240, y=W_HEIGHT // 3 + 155)
+
+        # 초기 지도 위치 설정 (위도, 경도 및 줌 레벨)
+        self.map_widget.set_address("NYC")
+        self.map_widget.set_zoom(10)  # 줌 레벨
+
+        # 검색 입력 상자 생성
+        self.map_entry = tk.Text(window, width=55, height=3)  # 너비와 높이를 지정할 수 있음
+        self.map_entry.place(x=20, y=(W_HEIGHT // 3 + 155) + (W_HEIGHT // 3) + 10)
+
+        # 검색 버튼 생성
+        map_search_button = tk.Button(window, text="매장 검색", command=self.search_location)
+        map_search_button.place(x=W_WIDTH // 2 - 65, y=(W_HEIGHT // 3 + 155) + (W_HEIGHT // 3) + 10)
 
         # 창 닫기 이벤트 처리
         window.protocol("WM_DELETE_WINDOW", self.on_closing)

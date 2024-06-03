@@ -102,3 +102,35 @@ def CalAveragePrice(goodInspectDay=None, goodId=None):
         return sum(price) // len(price)
 
 # print(CalAveragePrice("20220729", "168"))
+
+class GoodPrice:
+    def __init__(self, goodInspectDay=None, entpId=None, goodId=None, goodPrice=None):
+        self.goodInspectDay = goodInspectDay
+        self.entpId = entpId
+        self.goodId = goodId
+        self.goodPrice = goodPrice
+
+
+
+def getProductPriceInfoSvc(goodInspectDay=None, entpId=None, goodId=None):
+    url = 'http://openapi.price.go.kr/openApiImpl/ProductPriceInfoService/getProductPriceInfoSvc.do'
+    service_key = "bgABaHDCI6aMWSF9LIrvGAVSXbmEl193MNFLDhw+ndhs2/+TJ+PIq9J2DUn12Ei05O7fTEuSWxePGK8a7qfD0A=="
+
+    queryParams = {'serviceKey': service_key, 'goodInspectDay': goodInspectDay, 'entpId': entpId, 'goodId': goodId}
+
+    response = requests.get(url, params=queryParams)
+    print(response.text)
+
+    root = ET.fromstring(response.text)
+
+    goodPrice = root.find(".//iros.openapi.service.vo.goodPriceVO")
+    if goodPrice is not None:
+        temp = GoodPrice(
+            goodInspectDay=goodPrice.findtext("goodInspectDay"),
+            entpId=goodPrice.findtext("entpId"),
+            goodId=goodPrice.findtext("goodId"),
+            goodPrice=goodPrice.findtext("goodPrice"),
+        )
+        return temp
+    else:
+        return 0
