@@ -408,21 +408,66 @@ class MainGUI:
 
         self.search_marker = None
         self.search_in_progress = False
-        # 지도 위젯 생성 및 초기화
-        self.map_widget = TkinterMapView(window, width=W_WIDTH // 2 - 20, height=W_HEIGHT // 3, corner_radius=0)
-        self.map_widget.place(x=20, y=W_HEIGHT // 2)
 
-        # 초기 지도 위치 설정 (위도, 경도 및 줌 레벨)
-        self.map_widget.set_address("NYC")
-        self.map_widget.set_zoom(10)  # 줌 레벨
+        # ### 지도 ###
+        # self.map_widget = TkinterMapView(window, width=W_WIDTH // 2 - 20, height=W_HEIGHT // 3, corner_radius=0)
+        # self.map_widget.place(x=20, y=W_HEIGHT // 2)
+        #
+        # # 초기 지도 위치 설정 (위도, 경도 및 줌 레벨)
+        # self.map_widget.set_address("NYC")
+        # self.map_widget.set_zoom(10)  # 줌 레벨
+        #
+        # # 검색 입력 상자 생성
+        # self.map_entry = tk.Text(window, width=55, height=3)  # 너비와 높이를 지정할 수 있음
+        # self.map_entry.place(x=20, y=(W_HEIGHT // 2) + (W_HEIGHT // 3) + 10)
+        #
+        # # 검색 버튼 생성
+        # map_search_button = tk.Button(window, text="매장 검색", command=self.search_location)
+        # map_search_button.place(x=W_WIDTH // 2 - 65, y=(W_HEIGHT // 2) + (W_HEIGHT // 3) + 10)
 
-        # 검색 입력 상자 생성
-        self.map_entry = tk.Text(window, width=55, height=3)  # 너비와 높이를 지정할 수 있음
-        self.map_entry.place(x=20, y=(W_HEIGHT // 2) + (W_HEIGHT // 3) + 10)
+        # 콤보박스 스타일 설정
+        style.configure('TCombobox', padding=5, relief='flat', background='white')
 
-        # 검색 버튼 생성
-        map_search_button = tk.Button(window, text="매장 검색", command=self.search_location)
-        map_search_button.place(x=W_WIDTH // 2 - 65, y=(W_HEIGHT // 2) + (W_HEIGHT // 3) + 10)
+        # 버튼 스타일 설정 (별도의 이름으로 정의)
+        style.configure('TButton', padding=6, relief='solid', borderwidth=1, background='#ececec')
+
+        # 기존 코드 수정
+        ### 왼쪽 아래 부분에 검색 필터 추가 ###
+        filter_frame = tk.Frame(self.canvas)
+        self.canvas.create_window(40, W_HEIGHT // 3 + 250, anchor="nw", window=filter_frame)
+
+        # 제목 라벨
+        title_label = tk.Label(filter_frame, text="내 지역 최저가 매장", font=("와구리체 TTF", 16))
+        title_label.grid(row=0, column=0, columnspan=2, padx=20, pady=10)
+
+        # 지역 콤보박스
+        self.area_combobox = ttk.Combobox(filter_frame, values=list(s_area_detail_code.values()), style='TCombobox')
+        self.area_combobox.set("지역 선택")
+        self.area_combobox.grid(row=1, column=0, columnspan=2, padx=20, pady=10, sticky="ew")
+
+        # 품목군 콤보박스
+        self.category_combobox = ttk.Combobox(filter_frame, values=list(p_total_code_dic.values()), style='TCombobox')
+        self.category_combobox.set("품목군 선택")
+        self.category_combobox.grid(row=2, column=0, columnspan=2, padx=20, pady=10, sticky="ew")
+
+        # 품목 콤보박스
+        self.item_combobox = ttk.Combobox(filter_frame, values=["품목1", "품목2", "품목3"],
+                                          style='Custom.TCombobox')  # 여기에 실제 품목 데이터를 추가하세요.
+        self.item_combobox.set("품목 선택")
+        self.item_combobox.grid(row=3, column=0, columnspan=2, padx=20, pady=10, sticky="ew")
+
+        # 상품 콤보박스
+        self.product_combobox = ttk.Combobox(filter_frame, values=list(product_dic.keys()), style='TCombobox')
+        self.product_combobox.set("상품 선택")
+        self.product_combobox.grid(row=4, column=0, padx=20, pady=10, sticky="ew")
+
+        # 검색 버튼
+        self.search_button = ttk.Button(filter_frame, text="검색", command=self.search, style='TButton')
+        self.search_button.grid(row=4, column=1, padx=(0, 20), pady=10, sticky="ew")
+
+        # 각 열의 가중치를 동일하게 설정하여 너비를 맞춤
+        filter_frame.grid_columnconfigure(0, weight=1)
+        filter_frame.grid_columnconfigure(1, weight=1)
 
         # 창 닫기 이벤트 처리
         window.protocol("WM_DELETE_WINDOW", self.on_closing)
