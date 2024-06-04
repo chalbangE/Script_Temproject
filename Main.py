@@ -323,13 +323,9 @@ class MainGUI:
 
     def search_lowest_price_store(self):
         selected_area = self.area_combobox.get()
-        selected_category = self.category_combobox.get()
-        selected_item = self.item_combobox.get()
         selected_product = self.product_combobox.get()
 
         area_key = self.area_map.get(selected_area)
-        category_key = self.category_map.get(selected_category)
-        item_key = self.item_map.get(selected_item)
         product_key = self.product_map.get(selected_product)
 
         stores_by_price = {}
@@ -395,6 +391,7 @@ class MainGUI:
                 self.search_marker = self.map_widget.set_address(address, marker=True)
                 if self.search_marker:
                     self.search_marker.set_text(store_name)
+            self.map_widget.set_zoom(10)  # 줌 레벨
 
             self.search_in_progress = False
 
@@ -526,7 +523,6 @@ class MainGUI:
         self.canvas.create_window(273, W_HEIGHT // 3 + 155, anchor="nw", window=filter_frame)
 
         # 스타일 설정
-        style = ttk.Style()
         style.configure('TCombobox', padding=5, relief='flat', background='white')
         style.configure('TButton', padding=(5, 3), relief='solid', borderwidth=1, background='#ececec')
 
@@ -569,21 +565,40 @@ class MainGUI:
         filter_frame.grid_columnconfigure(0, weight=1)
         filter_frame.grid_columnconfigure(1, weight=1)
 
+        ### Treeview 초기화 및 추가 ###
+        # 스타일 설정
+        style = ttk.Style()
+        style.configure("Treeview", rowheight=30)  # 행 높이 설정
+
+        self.results_frame = ttk.Frame(window)
+        self.results_frame.place(x=295, y=575, width=315, height=212)
+
+        columns = ("store_name", "price")
+        self.results_tree = ttk.Treeview(self.results_frame, columns=columns, show='headings', height=3)
+        self.results_tree.heading("store_name", text="매장")
+        self.results_tree.heading("price", text="가격")
+
+        # Treeview 열 너비 설정
+        self.results_tree.column("store_name", width=150)
+        self.results_tree.column("price", width=150)
+
+        # Treeview 위젯을 프레임에 추가
+        self.results_tree.pack(fill=tk.BOTH, expand=True)
+
         ### 지도 ###
         self.map_widget = TkinterMapView(window, width=355, height=365, corner_radius=0)
         self.map_widget.place(x=625, y=W_HEIGHT // 3 + 155)
 
         # 초기 지도 위치 설정 (위도, 경도 및 줌 레벨)
-        self.map_widget.set_address("NYC")
         self.map_widget.set_zoom(10)  # 줌 레벨
 
-        # 검색 입력 상자 생성
-        self.map_entry = tk.Text(window, width=55, height=3)  # 너비와 높이를 지정할 수 있음
-        self.map_entry.place(x=20, y=(W_HEIGHT // 3 + 155) + (W_HEIGHT // 3) + 10)
-
-        # 검색 버튼 생성
-        map_search_button = tk.Button(window, text="매장 검색", command=self.search_location)
-        map_search_button.place(x=W_WIDTH // 2 - 65, y=(W_HEIGHT // 3 + 155) + (W_HEIGHT // 3) + 10)
+        # # 검색 입력 상자 생성
+        # self.map_entry = tk.Text(window, width=55, height=3)  # 너비와 높이를 지정할 수 있음
+        # self.map_entry.place(x=20, y=(W_HEIGHT // 3 + 155) + (W_HEIGHT // 3) + 10)
+        #
+        # # 검색 버튼 생성
+        # map_search_button = tk.Button(window, text="매장 검색", command=self.search_location)
+        # map_search_button.place(x=W_WIDTH // 2 - 65, y=(W_HEIGHT // 3 + 155) + (W_HEIGHT // 3) + 10)
 
 
         # 창 닫기 이벤트 처리
