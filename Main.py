@@ -1,16 +1,17 @@
-import tkinter as tk
-from tkinter import ttk
-import tkinter.font as tkFont
-import random
-import Product
-import Store
-from PIL import Image, ImageTk
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import datetime
+import random
+import tkinter as tk
+import tkinter.font as tkFont
+from tkinter import ttk
+
+import matplotlib.pyplot as plt
+from PIL import Image, ImageTk
 from dateutil.relativedelta import relativedelta
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkintermapview import TkinterMapView
 
+import Product
+import Store
 
 W_WIDTH = 1000
 W_HEIGHT = 800
@@ -18,10 +19,10 @@ W_HEIGHT = 800
 product_dic = Product.LoadAllProduct()
 store_dic = Store.LoadAllStore()
 
-p_unit_code_dic = Product.LoadUnitDivCode()         # 상품 단위 구분 코드 (병, 캔, 컵, 개...)
-p_total_code_dic = Product.LoadTotalDivCode()       # 상품 소분류 코드 (살충제, 세탁세제...)
-s_area_code = Store.LoadAreaCode()                  # 업체 업태 코드 (편의점, 백화점...)
-s_area_detail_code = Store.LoadAreaDetailCode()     # 업체 지역 코드 (서울, 광주...)
+p_unit_code_dic = Product.LoadUnitDivCode()  # 상품 단위 구분 코드 (병, 캔, 컵, 개...)
+p_total_code_dic = Product.LoadTotalDivCode()  # 상품 소분류 코드 (살충제, 세탁세제...)
+s_area_code = Store.LoadAreaCode()  # 업체 업태 코드 (편의점, 백화점...)
+s_area_detail_code = Store.LoadAreaDetailCode()  # 업체 지역 코드 (서울, 광주...)
 
 
 def get_previous_month(month_str, cnt):
@@ -70,7 +71,6 @@ def print_product_info(goodid):
     print('detailMean', product_dic[goodid].detailMean)
     print('goodTotalCnt', product_dic[goodid].goodTotalCnt)
     print('goodTotalDivCode', product_dic[goodid].goodTotalDivCode)
-
 
 
 class GIF:
@@ -168,8 +168,8 @@ class MainGUI:
                 p_two_weeks_ago = Product.CalAveragePrice(self.two_weeks_ago, product.goodId)
                 p_a_year_ago = Product.CalAveragePrice(self.a_year_ago, product.goodId)
 
-                temp.append(goodName)                                                 # 상품명
-                temp.append(product.goodBaseCnt + p_unit_code_dic[product.goodUnitDivCode])   # 상품단위
+                temp.append(goodName)  # 상품명
+                temp.append(product.goodBaseCnt + p_unit_code_dic[product.goodUnitDivCode])  # 상품단위
 
                 temp.append(p_this_week)
                 temp.append(p_two_weeks_ago)
@@ -422,6 +422,7 @@ class MainGUI:
                        "현재"]
 
         ### 타이틀 ###
+
         Title_font = tkFont.Font(family="와구리체 TTF", size=30)
         Subtitle_font = tkFont.Font(family="UhBee Seulvely", size=15)
         Basic_font = tkFont.Font(family="SUITE", size=12)
@@ -439,12 +440,18 @@ class MainGUI:
         self.canvas.create_text(W_WIDTH / 2, 35, tags="title", text='오늘 할 일 : 장 보기', font=Title_font)
 
         if random.randint(0, 1) == 0:
-            self.canvas.create_text(W_WIDTH / 2, 75, tags="subtitle", text='엄마가 시킨 심부름 : ' + self.words[random.randint(0, len(self.words) - 1)]\
-                            + ', '+ self.words[random.randint(0, len(self.words) - 1)], font=Subtitle_font)
+            self.canvas.create_text(W_WIDTH / 2, 75, tags="subtitle",
+                                    text='엄마가 시킨 심부름 : ' + self.words[random.randint(0, len(self.words) - 1)] \
+                                         + ', ' + self.words[random.randint(0, len(self.words) - 1)],
+                                    font=Subtitle_font)
         else:
-            self.canvas.create_text(W_WIDTH / 2, 75, tags="subtitle", text='엄마가 시킨 심부름 : ' + self.words[random.randint(0, len(self.words) - 1)]\
-                            + ', '+ self.words[random.randint(0, len(self.words) - 1)] + ', '+ self.words[random.randint(0, len(self.words) - 1)], font=Subtitle_font)
+            self.canvas.create_text(W_WIDTH / 2, 75, tags="subtitle",
+                                    text='엄마가 시킨 심부름 : ' + self.words[random.randint(0, len(self.words) - 1)] \
+                                         + ', ' + self.words[random.randint(0, len(self.words) - 1)] + ', ' +
+                                         self.words[random.randint(0, len(self.words) - 1)], font=Subtitle_font)
+
         ### 상품 검색창 ###
+
         self.text = tk.Text(window, width=25, height=6)  # 너비와 높이를 지정할 수 있음
         self.text.place(x=W_WIDTH - 250, y=15)
 
@@ -454,6 +461,7 @@ class MainGUI:
         search_button.place(x=W_WIDTH - 100, y=15)
 
         ### 테마 ###
+
         self.show_mod = 'white'
 
         # 다크모드 이미지 로드
@@ -472,6 +480,7 @@ class MainGUI:
         self.gif_instance.animate(window)
 
         ### 주간 가격정보 ###
+
         self.category_contents = {
             "곡물가공품": {"table": [["A", 1], ["B", 2], ["C", 3]], "graph": [1, 2, 3], "labels": self.labels},
             "축산물": {"table": [], "graph": [], "labels": self.labels},
@@ -487,7 +496,8 @@ class MainGUI:
         style = ttk.Style()
         style.configure("TNotebook.Tab", borderwidth=1, padding=[5, 2])
         style.map("TNotebook.Tab",
-                  foreground=[("selected", "#000080"), ("!selected", "#808080")],  # 폰트 색상을 남색으로 설정, # 선택되지 않은 탭의 글꼴 색상을 회색으로 설정
+                  foreground=[("selected", "#000080"), ("!selected", "#808080")],
+                  # 폰트 색상을 남색으로 설정, # 선택되지 않은 탭의 글꼴 색상을 회색으로 설정
                   font=[("selected", Basic_font), ("!selected", Basic_font)])
 
         style.configure("Treeview", rowheight=40)  # 행 높이 설정
@@ -536,7 +546,8 @@ class MainGUI:
         self.area_combobox.grid(row=1, column=0, padx=(20, 5), pady=5, sticky="ew")
 
         # 품목군 콤보박스
-        self.category_combobox = ttk.Combobox(filter_frame, values=list(self.category_map.keys()), style='TCombobox', width=18)
+        self.category_combobox = ttk.Combobox(filter_frame, values=list(self.category_map.keys()), style='TCombobox',
+                                              width=18)
         self.category_combobox.set("품목군 선택")
         self.category_combobox.grid(row=1, column=1, padx=(5, 20), pady=5, sticky="ew")
 
@@ -547,7 +558,6 @@ class MainGUI:
 
         # 품목군 선택 이벤트 바인딩
         self.category_combobox.bind("<<ComboboxSelected>>", self.update_items)
-
         # 품목 선택 이벤트 바인딩
         self.item_combobox.bind("<<ComboboxSelected>>", self.update_products)
 
@@ -566,8 +576,7 @@ class MainGUI:
         filter_frame.grid_columnconfigure(1, weight=1)
 
         ### Treeview 초기화 및 추가 ###
-        # 스타일 설정
-        style = ttk.Style()
+
         style.configure("Treeview", rowheight=30)  # 행 높이 설정
 
         self.results_frame = ttk.Frame(window)
@@ -586,6 +595,7 @@ class MainGUI:
         self.results_tree.pack(fill=tk.BOTH, expand=True)
 
         ### 지도 ###
+
         self.map_widget = TkinterMapView(window, width=355, height=365, corner_radius=0)
         self.map_widget.place(x=625, y=W_HEIGHT // 3 + 155)
 
@@ -600,11 +610,11 @@ class MainGUI:
         # map_search_button = tk.Button(window, text="매장 검색", command=self.search_location)
         # map_search_button.place(x=W_WIDTH // 2 - 65, y=(W_HEIGHT // 3 + 155) + (W_HEIGHT // 3) + 10)
 
-
         # 창 닫기 이벤트 처리
         window.protocol("WM_DELETE_WINDOW", self.on_closing)
 
         ### 메인 루프 ###
+
         self.window = window
         window.mainloop()
 
