@@ -355,21 +355,48 @@ class MainGUI:
 
         columns = ("store_name", "price")
         self.results_tree = ttk.Treeview(self.results_frame, columns=columns, show='headings', height=3)
-        self.results_tree.heading("store_name", text="판매점")
+        self.results_tree.heading("store_name", text="매장")
         self.results_tree.heading("price", text="가격")
 
         # Treeview 열 너비 설정
-        self.results_tree.column("store_name", width=150, anchor='center')
-        self.results_tree.column("price", width=150, anchor='center')
+        self.results_tree.column("store_name", width=150)
+        self.results_tree.column("price", width=150)
 
         # Treeview에 정렬된 결과 추가
         for store_id, price_info in sorted_stores_by_price.items():
             store_name = store_dic[store_id].entpName
-            self.results_tree.insert("", "end", values=(store_name, price_info.goodPrice))
+            price_with_unit = f"{price_info.goodPrice}원"
+            self.results_tree.insert("", "end", values=(store_name, price_with_unit))
 
         self.results_tree.pack(fill=tk.BOTH, expand=True)
 
-        print(f"지역 key: {area_key}, 품목군 key: {category_key}, 품목 key: {item_key}, 상품 key: {product_key}")
+        # 행 클릭 이벤트 바인딩
+        self.results_tree.bind("<ButtonRelease-1>", self.on_store_row_click)
+
+    def on_store_row_click(self, event):
+        if not self.search_in_progress:
+            self.search_in_progress = True
+
+            selected_item = event.widget.selection()
+            address = None
+            store_name = None
+            if selected_item:
+                item_values = event.widget.item(selected_item[0], "values")
+                store_name = item_values[0]
+                # store_dic에서 선택된 매장의 주소와 우편번호를 가져옴
+                for store_id, store in store_dic.items():
+                    if store.entpName == store_name:
+                        address = store.roadAddrBasic
+                        print(address)
+                        break
+
+            if address:
+                # 지도에 마커 설정
+                self.search_marker = self.map_widget.set_address(address, marker=True)
+                if self.search_marker:
+                    self.search_marker.set_text(store_name)
+
+            self.search_in_progress = False
 
     def __init__(self):
         window = tk.Tk()
