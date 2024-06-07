@@ -699,7 +699,8 @@ class MainGUI:
         # 초기 지도 위치 설정 (위도, 경도 및 줌 레벨)
         self.map_widget_local.set_zoom(10)  # 줌 레벨
 
-        ### 생필품 검색 필터 ###
+        ### 생필품 가격 정보 조회 ###
+
         self.item_map_goods = {}
         self.product_map_goods = {}
 
@@ -711,8 +712,8 @@ class MainGUI:
         style.configure('TButton', padding=(5, 3), relief='solid', borderwidth=1, background='#ececec')
 
         # 제목 라벨
-        title_label_goods = tk.Label(filter_frame_goods, text="생필품 가격정보", font=("와구리체 TTF", 16))
-        title_label_goods.grid(row=0, column=0, columnspan=5, padx=5, pady=5, sticky="ew")
+        title_label_goods = tk.Label(filter_frame_goods, text="생필품 가격 정보", font=("와구리체 TTF", 16))
+        title_label_goods.grid(row=0, column=0, columnspan=5, padx=5, pady=5, sticky="w")
 
         # 업태 체크박스들
         entp_label_goods = tk.Label(filter_frame_goods, text="업태", font=("와구리체 TTF", 12))
