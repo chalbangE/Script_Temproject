@@ -451,6 +451,43 @@ class MainGUI:
 
             self.search_in_progress = False
 
+    def search_product_price_info(self):
+        # 체크된 업태들의 코드 가져오기
+        selected_entp_types = [entp for entp, var in self.entp_vars_goods.items() if var.get()]
+        selected_entp_codes = [code for code, entp in s_area_code.items() if entp in selected_entp_types]
+        if not selected_entp_codes:
+            selected_entp_codes = [0]  # 아무것도 체크되지 않은 경우 0으로 설정
+
+        # 지역 코드 가져오기
+        selected_area = self.area_combobox_goods.get()
+        area_key = self.area_map_local.get(selected_area, 0)
+
+        # 품목군 코드 가져오기
+        selected_category = self.category_combobox_goods.get()
+        category_key = self.category_map_local.get(selected_category, 0)
+
+        # 품목 코드 가져오기
+        selected_item = self.item_combobox_goods.get()
+        item_key = self.item_map_goods.get(selected_item, 0)
+
+        # 상품 코드 가져오기
+        selected_product = self.product_combobox_goods.get()
+        product_key = self.product_map_goods.get(selected_product, 0)
+
+        # 판매점 entpId 가져오기
+        selected_store = self.store_combobox_goods.get()
+        store_key = next((key for key, store in store_dic.items() if store.entpName == selected_store), 0)
+
+        # Debug: Print the retrieved codes
+        print(f"Selected Entp Codes: {selected_entp_codes}")
+        print(f"Selected Area Code: {area_key}")
+        print(f"Selected Category Code: {category_key}")
+        print(f"Selected Item Code: {item_key}")
+        print(f"Selected Product Code: {product_key}")
+        print(f"Selected Store Id: {store_key}")
+
+        # 여기에 조회된 값을 사용하여 필요한 작업을 추가할 수 있습니다.
+
     def __init__(self):
         window = tk.Tk()
         window.title('오늘 할 일 : 장 보기')
@@ -744,8 +781,8 @@ class MainGUI:
         self.product_combobox_goods.set("전체")
         self.product_combobox_goods.grid(row=7, column=1, padx=5, pady=5, sticky="ew", columnspan=4)
 
-        # 조회 버튼을 품목 콤보박스 오른쪽에 배치하고 높이를 늘림
-        self.search_button_goods = ttk.Button(filter_frame_goods, text="조회", command=self.search_lowest_price_store,
+        # 상품 조회 버튼
+        self.search_button_goods = ttk.Button(filter_frame_goods, text="조회", command=self.search_product_price_info,
                                               style='TButton', width=10)
         self.search_button_goods.grid(row=8, column=0, columnspan=5, padx=5, pady=5, sticky="ew",
                                       ipady=20)  # 전체 행을 덮도록 설정
