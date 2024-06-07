@@ -13,7 +13,7 @@ from tkintermapview import TkinterMapView
 import Product
 import Store
 
-W_WIDTH = 1000
+W_WIDTH = 1100
 W_HEIGHT = 800
 
 product_dic = Product.LoadAllProduct()
@@ -311,7 +311,7 @@ class MainGUI:
             self.item_map = new_items
             self.item_combobox['values'] = list(new_items.keys())
 
-    def update_products(self, event):
+    def update_products(self, event=None):
         selected_item = self.item_combobox.get()
         selected_key = self.item_map.get(selected_item)
 
@@ -394,6 +394,22 @@ class MainGUI:
             self.map_widget.set_zoom(10)  # 줌 레벨
 
             self.search_in_progress = False
+
+    def update_stores(self, event=None):
+        selected_area = self.area_combobox.get()
+        selected_area_code = self.area_map.get(selected_area)
+
+        # 선택된 업태 체크박스 이름들
+        selected_entp_types = [key for key, var in self.entp_vars.items() if var.get()]
+        # 선택된 업태 체크박스 이름에 해당하는 코드들
+        selected_entp_codes = [code for code, entp in s_area_code.items() if entp in selected_entp_types]
+
+        if selected_area_code:
+            store_names = [store.entpName for store in store_dic.values() if
+                           store.entpAreaCode == selected_area_code and store.entpTypeCode in selected_entp_codes]
+            self.store_combobox['values'] = store_names
+        else:
+            self.store_combobox['values'] = []
 
     def __init__(self):
         window = tk.Tk()
@@ -530,7 +546,7 @@ class MainGUI:
         self.product_map = {}
 
         filter_frame = tk.Frame(self.canvas)
-        self.canvas.create_window(273, W_HEIGHT // 3 + 155, anchor="nw", window=filter_frame)
+        self.canvas.create_window(273+75, W_HEIGHT // 3 + 155, anchor="nw", window=filter_frame)
 
         # 스타일 설정
         style.configure('TCombobox', padding=5, relief='flat', background='white')
@@ -580,7 +596,7 @@ class MainGUI:
         style.configure("Treeview", rowheight=30)  # 행 높이 설정
 
         self.results_frame = ttk.Frame(window)
-        self.results_frame.place(x=295, y=575, width=315, height=212)
+        self.results_frame.place(x=295+75, y=575, width=315, height=212)
 
         columns = ("store_name", "price")
         self.results_tree = ttk.Treeview(self.results_frame, columns=columns, show='headings', height=3)
@@ -596,8 +612,8 @@ class MainGUI:
 
         ### 지도 ###
 
-        self.map_widget = TkinterMapView(window, width=355, height=365, corner_radius=0)
-        self.map_widget.place(x=625, y=W_HEIGHT // 3 + 155)
+        self.map_widget = TkinterMapView(window, width=355+25, height=365, corner_radius=0)
+        self.map_widget.place(x=625+75, y=W_HEIGHT // 3 + 155)
 
         # 초기 지도 위치 설정 (위도, 경도 및 줌 레벨)
         self.map_widget.set_zoom(10)  # 줌 레벨
@@ -609,6 +625,101 @@ class MainGUI:
         # # 검색 버튼 생성
         # map_search_button = tk.Button(window, text="매장 검색", command=self.search_location)
         # map_search_button.place(x=W_WIDTH // 2 - 65, y=(W_HEIGHT // 3 + 155) + (W_HEIGHT // 3) + 10)
+
+        ### 생필품 검색 필터 ###
+
+        filter_frame = tk.Frame(self.canvas)
+        self.canvas.create_window(20, W_HEIGHT // 3 + 155, anchor="nw", window=filter_frame)
+
+        # 스타일 설정
+        style.configure('TCombobox', padding=5, relief='flat', background='white')
+        style.configure('TButton', padding=(5, 3), relief='solid', borderwidth=1, background='#ececec')
+
+        # 제목 라벨
+        title_label = tk.Label(filter_frame, text="생필품 가격정보", font=("와구리체 TTF", 16))
+        title_label.grid(row=0, column=0, columnspan=5, padx=5, pady=5, sticky="ew")
+
+        # 업태 체크박스들
+        entp_label = tk.Label(filter_frame, text="업태", font=("와구리체 TTF", 12))
+        entp_label.grid(row=1, column=0, padx=5, pady=5, sticky="w")
+
+        self.entp_types = ["대형마트", "백화점", "편의점", "슈퍼마켓", "전통시장"]
+        self.entp_vars = {entp: tk.BooleanVar() for entp in self.entp_types}
+        checkbox_frame1 = tk.Frame(filter_frame)
+        checkbox_frame1.grid(row=1, column=1, columnspan=4, padx=5, pady=5, sticky="w")
+
+        checkbox_frame2 = tk.Frame(filter_frame)
+        checkbox_frame2.grid(row=2, column=1, columnspan=4, padx=5, pady=5, sticky="w")
+
+        # 첫 번째 행 체크박스
+        for i, entp in enumerate(self.entp_types[:3]):
+            chk = tk.Checkbutton(checkbox_frame1, text=entp, variable=self.entp_vars[entp], command=self.update_stores)
+            chk.pack(side=tk.LEFT, padx=10)  # 간격을 동일하게 설정
+
+        # 두 번째 행 체크박스
+        for i, entp in enumerate(self.entp_types[3:]):
+            chk = tk.Checkbutton(checkbox_frame2, text=entp, variable=self.entp_vars[entp], command=self.update_stores)
+            chk.pack(side=tk.LEFT, padx=10)  # 간격을 동일하게 설정
+
+        # 지역 콤보박스
+        area_label = tk.Label(filter_frame, text="지역", font=("와구리체 TTF", 12))
+        area_label.grid(row=3, column=0, padx=5, pady=5, sticky="w")
+
+        self.area_combobox = ttk.Combobox(filter_frame, values=list(self.area_map.keys()), style='TCombobox', width=15)
+        self.area_combobox.set("지역 선택")
+        self.area_combobox.grid(row=3, column=1, padx=5, pady=5, sticky="ew", columnspan=4)
+
+        # 판매점 콤보박스
+        store_label = tk.Label(filter_frame, text="판매점", font=("와구리체 TTF", 12))
+        store_label.grid(row=4, column=0, padx=5, pady=5, sticky="w")
+
+        self.store_combobox = ttk.Combobox(filter_frame, values=[], style='TCombobox', width=15)
+        self.store_combobox.set("판매점 선택")
+        self.store_combobox.grid(row=4, column=1, padx=5, pady=5, sticky="ew", columnspan=4)
+
+        # 품목군 콤보박스
+        category_label = tk.Label(filter_frame, text="품목군", font=("와구리체 TTF", 12))
+        category_label.grid(row=5, column=0, padx=5, pady=5, sticky="w")
+
+        self.category_combobox = ttk.Combobox(filter_frame, values=list(self.category_map.keys()), style='TCombobox',
+                                              width=15)
+        self.category_combobox.set("품목군 선택")
+        self.category_combobox.grid(row=5, column=1, padx=5, pady=5, sticky="ew", columnspan=4)
+
+        # 품목 콤보박스
+        item_label = tk.Label(filter_frame, text="품목", font=("와구리체 TTF", 12))
+        item_label.grid(row=6, column=0, padx=5, pady=5, sticky="w")
+
+        self.item_combobox = ttk.Combobox(filter_frame, values=[], style='TCombobox', width=15)
+        self.item_combobox.set("품목 선택")
+        self.item_combobox.grid(row=6, column=1, padx=5, pady=5, sticky="ew", columnspan=4)
+
+        # 상품 콤보박스
+        product_label = tk.Label(filter_frame, text="상품", font=("와구리체 TTF", 12))
+        product_label.grid(row=7, column=0, padx=5, pady=5, sticky="w")
+
+        self.product_combobox = ttk.Combobox(filter_frame, values=[], style='TCombobox', width=15)
+        self.product_combobox.set("상품 선택")
+        self.product_combobox.grid(row=7, column=1, padx=5, pady=5, sticky="ew", columnspan=4)
+
+        # 조회 버튼을 품목 콤보박스 오른쪽에 배치하고 높이를 늘림
+        self.search_button = ttk.Button(filter_frame, text="조회", command=self.search_lowest_price_store,
+                                        style='TButton', width=10)
+        self.search_button.grid(row=8, column=0, columnspan=5, padx=5, pady=5, sticky="ew", ipady=20)  # 전체 행을 덮도록 설정
+
+        # 각 열의 가중치를 동일하게 설정하여 너비를 맞춤
+        filter_frame.grid_columnconfigure(0, weight=1)
+        filter_frame.grid_columnconfigure(1, weight=1)
+        filter_frame.grid_columnconfigure(2, weight=1)
+        filter_frame.grid_columnconfigure(3, weight=1)
+        filter_frame.grid_columnconfigure(4, weight=1)
+
+        # 품목군 선택 이벤트 바인딩
+        self.category_combobox.bind("<<ComboboxSelected>>", self.update_items)
+        self.item_combobox.bind("<<ComboboxSelected>>", self.update_products)
+
+        # 지역 선택 이벤트 바인딩
+        self.area_combobox.bind("<<ComboboxSelected>>", self.update_stores)
 
         # 창 닫기 이벤트 처리
         window.protocol("WM_DELETE_WINDOW", self.on_closing)
