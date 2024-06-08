@@ -451,6 +451,23 @@ class MainGUI:
 
             self.search_in_progress = False
 
+    def open_new_window(self):
+        # 새로운 창 생성
+        new_window = tk.Toplevel(self.window)
+        new_window.title("오늘 할 일 - 장 보기")
+        new_window.geometry("1100x800")
+
+        self.new_canvas = tk.Canvas(new_window, bg='white', width=W_WIDTH, height=W_HEIGHT)
+        self.new_canvas.pack()
+
+        # 새로운 창에 라벨 추가
+        label = ttk.Label(new_window, text="오늘 할 일 - 장 보기")
+        label.pack(pady=20)
+
+        # # 새로운 창에 버튼 추가
+        # close_button = ttk.Button(new_window, text="닫기", command=new_window.destroy)
+        # close_button.pack(pady=10)
+
     def search_product_price_info(self):
         # 체크된 업태들의 코드 가져오기
         selected_entp_types = [entp for entp, var in self.entp_vars_goods.items() if var.get()]
@@ -486,7 +503,9 @@ class MainGUI:
         print(f"Selected Product Code: {product_key}")
         print(f"Selected Store Id: {store_key}")
 
+        self.open_new_window()
         # 여기에 조회된 값을 사용하여 필요한 작업을 추가할 수 있습니다.
+
 
     def __init__(self):
         window = tk.Tk()
