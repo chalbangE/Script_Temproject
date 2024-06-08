@@ -117,6 +117,7 @@ class MainGUI:
             self.canvas.itemconfig("title_line", fill='black')
             self.canvas.itemconfig("title", fill='black')
             self.canvas.itemconfig("background", fill='white')
+            # self.new_canvas.itemconfig("new_canvas", fill='white')
         elif self.show_mod == 'white':
             self.show_mod = 'black'
             self.dark_mod_button['image'] = self.dark_mod_on_image
@@ -124,6 +125,7 @@ class MainGUI:
             self.canvas.itemconfig("title_line", fill='white')
             self.canvas.itemconfig("title", fill='white')
             self.canvas.itemconfig("background", fill='black')
+            # self.new_canvas.itemconfig("new_canvas", fill='black')
 
     def search(self):
         query = self.text.get("1.0", "end-1c")  # 첫 번째 줄의 첫 번째 문자부터 마지막 줄의 마지막 문자까지의 텍스트 가져오기
@@ -457,12 +459,8 @@ class MainGUI:
         new_window.title("오늘 할 일 - 장 보기")
         new_window.geometry("1100x800")
 
-        self.new_canvas = tk.Canvas(new_window, bg='white', width=W_WIDTH, height=W_HEIGHT)
+        self.new_canvas = tk.Canvas(new_window, bg='white', width=W_WIDTH, height=W_HEIGHT, tags="new_canvas")
         self.new_canvas.pack()
-
-        # 새로운 창에 라벨 추가
-        label = ttk.Label(new_window, text="오늘 할 일 - 장 보기")
-        label.pack(pady=20)
 
         # # 새로운 창에 버튼 추가
         # close_button = ttk.Button(new_window, text="닫기", command=new_window.destroy)
@@ -495,13 +493,13 @@ class MainGUI:
         selected_store = self.store_combobox_goods.get()
         store_key = next((key for key, store in store_dic.items() if store.entpName == selected_store), 0)
 
-        # Debug: Print the retrieved codes
-        print(f"Selected Entp Codes: {selected_entp_codes}")
-        print(f"Selected Area Code: {area_key}")
-        print(f"Selected Category Code: {category_key}")
-        print(f"Selected Item Code: {item_key}")
-        print(f"Selected Product Code: {product_key}")
-        print(f"Selected Store Id: {store_key}")
+        # # Debug: Print the retrieved codes
+        # print(f"Selected Entp Codes: {selected_entp_codes}")
+        # print(f"Selected Area Code: {area_key}")
+        # print(f"Selected Category Code: {category_key}")
+        # print(f"Selected Item Code: {item_key}")
+        # print(f"Selected Product Code: {product_key}")
+        # print(f"Selected Store Id: {store_key}")
 
         self.open_new_window()
         # 여기에 조회된 값을 사용하여 필요한 작업을 추가할 수 있습니다.
@@ -801,11 +799,11 @@ class MainGUI:
         self.product_combobox_goods.set("전체")
         self.product_combobox_goods.grid(row=7, column=1, padx=5, pady=5, sticky="ew", columnspan=4)
 
-        # 상품 조회 버튼
-        self.search_button_goods = ttk.Button(filter_frame_goods, text="조회", command=self.search_product_price_info,
-                                              style='TButton', width=10)
-        self.search_button_goods.grid(row=8, column=0, columnspan=5, padx=5, pady=5, sticky="ew",
-                                      ipady=20)  # 전체 행을 덮도록 설정
+        search_button_goods_img = Image.open("img/inquiry_cat.png")
+        search_button_goods_img = ImageTk.PhotoImage(search_button_goods_img)
+
+        self.search_button_goods = ttk.Button(filter_frame_goods, image=search_button_goods_img, command=self.search_product_price_info, width=10)
+        self.search_button_goods.grid(row=8, column=0, columnspan=5, padx=5, pady=5, sticky="ew", ipady=20)  # 전체 행을 덮도록 설정
 
         # 각 열의 가중치를 동일하게 설정하여 너비를 맞춤
         filter_frame_goods.grid_columnconfigure(0, weight=1)
