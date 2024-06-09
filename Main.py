@@ -334,28 +334,32 @@ class MainGUI:
         if selected_key:
             new_items = {v: k for k, v in p_total_code_dic.items() if
                          int(k) // 1000 == int(selected_key) // 1000 and int(k) % 1000 != 0}
-            item_values = ["전체"] + list(new_items.keys())
+            item_values = list(new_items.keys())
             self.item_map_goods = new_items
             self.item_combobox_goods['values'] = item_values
-            self.item_combobox_goods.set("전체")
-            self.update_products_goods(event=None)  # 품목이 업데이트된 후 상품도 업데이트
+            self.item_combobox_goods.set("품목 선택")
+            self.product_combobox_goods.set("상품 선택")
+            self.product_combobox_goods['values'] = []
+        else:
+            self.item_combobox_goods.set("품목 선택")
+            self.product_combobox_goods.set("상품 선택")
+            self.item_combobox_goods['values'] = []
+            self.product_combobox_goods['values'] = []
 
     def update_products_goods(self, event=None):
         selected_item = self.item_combobox_goods.get()
-        if selected_item == "전체":
-            self.product_combobox_goods['values'] = ["전체"]
-            self.product_combobox_goods.set("전체")
-            return
-
         selected_key = self.item_map_goods.get(selected_item)
 
         if selected_key:
             new_products = {product.goodName: product.goodId for product in product_dic.values() if
                             product.goodSmlclsCode == selected_key}
-            product_values = ["전체"] + list(new_products.keys())
+            product_values = list(new_products.keys())
             self.product_map_goods = new_products
             self.product_combobox_goods['values'] = product_values
-            self.product_combobox_goods.set("전체")
+            self.product_combobox_goods.set("상품 선택")
+        else:
+            self.product_combobox_goods.set("상품 선택")
+            self.product_combobox_goods['values'] = []
 
     def update_stores_goods(self, event=None):
         selected_area = self.area_combobox_goods.get()
@@ -453,22 +457,12 @@ class MainGUI:
 
             self.search_in_progress = False
 
-    def open_new_window(self):
-        # 새로운 창 생성
-        new_window = tk.Toplevel(self.window)
-        new_window.title("오늘 할 일 - 장 보기")
-        new_window.geometry("1100x800")
-
-        self.new_canvas = tk.Canvas(new_window, bg='white', width=W_WIDTH, height=W_HEIGHT, tags="new_canvas")
-        self.new_canvas.pack()
-
-        # # 새로운 창에 버튼 추가
-        # close_button = ttk.Button(new_window, text="닫기", command=new_window.destroy)
-        # close_button.pack(pady=10)
-
     def search_product_price_info(self):
         # 체크된 업태들의 코드 가져오기
         selected_entp_types = [entp for entp, var in self.entp_vars_goods.items() if var.get()]
+        if not selected_entp_types:
+            print("업태가 선택되지 않았습니다.")
+            return
         selected_entp_codes = [code for code, entp in s_area_code.items() if entp in selected_entp_types]
         if not selected_entp_codes:
             selected_entp_codes = [0]  # 아무것도 체크되지 않은 경우 0으로 설정
@@ -480,34 +474,148 @@ class MainGUI:
         # 품목군 코드 가져오기
         selected_category = self.category_combobox_goods.get()
         category_key = self.category_map_local.get(selected_category, 0)
+        if not selected_category or selected_category == "품목군 선택":
+            print("품목군이 선택되지 않았습니다.")
+            return
 
         # 품목 코드 가져오기
         selected_item = self.item_combobox_goods.get()
         item_key = self.item_map_goods.get(selected_item, 0)
+        if not selected_item or selected_item == "품목 선택":
+            print("품목이 선택되지 않았습니다.")
+            return
 
         # 상품 코드 가져오기
         selected_product = self.product_combobox_goods.get()
         product_key = self.product_map_goods.get(selected_product, 0)
+        if not selected_product or selected_product == "상품 선택":
+            print("상품이 선택되지 않았습니다.")
+            return
 
         # 판매점 entpId 가져오기
         selected_store = self.store_combobox_goods.get()
         store_key = next((key for key, store in store_dic.items() if store.entpName == selected_store), 0)
 
-        # # Debug: Print the retrieved codes
-        # print(f"Selected Entp Codes: {selected_entp_codes}")
-        # print(f"Selected Area Code: {area_key}")
-        # print(f"Selected Category Code: {category_key}")
-        # print(f"Selected Item Code: {item_key}")
-        # print(f"Selected Product Code: {product_key}")
-        # print(f"Selected Store Id: {store_key}")
+        # 새로운 창 생성
+        new_window = tk.Toplevel(self.window)
+        new_window.title("오늘 할 일 : 장보기")
+        new_window.geometry("1100x800")
 
-        self.open_new_window()
-        # 여기에 조회된 값을 사용하여 필요한 작업을 추가할 수 있습니다.
+        # 제목 라벨
+        title_label = tk.Label(new_window, text="생필품 가격 정보", font=("와구리체 TTF", 18))
+        title_label.pack(pady=(10, 0))
 
+        # 선 그리기
+        title_line = tk.Frame(new_window, height=2, bg='black', bd=0, width=1100 - 560)
+        title_line.pack(fill=tk.X, padx=20, pady=10)
+
+        # Notebook 생성
+        notebook = ttk.Notebook(new_window)
+        notebook.pack(fill=tk.BOTH, expand=True, padx=20)
+
+        # 전체 탭 생성
+        all_tab_frame = ttk.Frame(notebook)
+        notebook.add(all_tab_frame, text="전체")
+
+        # 데이터 리스트 생성
+        data_list = self.add_product_info_to_tab(all_tab_frame, selected_entp_codes, product_key, area_key, store_key,
+                                                 ['전체'])
+
+        # 각 업태별로 탭 생성
+        for entp_type, entp_code in zip(selected_entp_types, selected_entp_codes):
+            tab_frame = ttk.Frame(notebook)
+            notebook.add(tab_frame, text=entp_type)
+
+            # 각 탭 내용
+            self.add_product_info_to_tab(tab_frame, [entp_code], product_key, area_key, store_key, [entp_type],
+                                         data_list)
+
+    def add_product_info_to_tab(self, tab_frame, selected_entp_codes, product_key, area_key, store_key, entp_types,
+                                data_list=None):
+        print(f"Creating tab for entp_types: {entp_types}, selected_entp_codes: {selected_entp_codes}")
+
+        if '전체' in entp_types:
+            return self.add_product_section(tab_frame, selected_entp_codes, product_key, area_key, store_key,
+                                            entp_types)
+        else:
+            self.add_product_section(tab_frame, selected_entp_codes, product_key, area_key, store_key, entp_types,
+                                     data_list)
+
+    def add_product_section(self, scrollable_canvas_frame, selected_entp_codes, product_key, area_key, store_key,
+                            entp_types, data_list=None):
+        # 상품명 라벨
+        product_name = next((name for name, product in product_dic.items() if product.goodId == product_key), "상품명")
+
+        # 데이터 추가를 위한 임시 저장소
+        data_added = False
+
+        # Treeview 생성
+        columns = ("지역", "판매점", "상품명", "가격")
+        results_tree = ttk.Treeview(scrollable_canvas_frame, columns=columns, show='headings')
+        results_tree.heading("지역", text="지역")
+        results_tree.heading("판매점", text="판매점")
+        results_tree.heading("상품명", text="상품명")
+        results_tree.heading("가격", text="가격")
+
+        # Treeview 열 너비 설정
+        results_tree.column("지역", width=200)
+        results_tree.column("판매점", width=200)
+        results_tree.column("상품명", width=200)
+        results_tree.column("가격", width=100)
+
+        # 데이터 개수를 세기 위한 변수
+        data_count = 0
+
+        if data_list is None:
+            data_list = []
+            # 데이터 추가
+            for store_id, store in store_dic.items():
+                if store.entpTypeCode in selected_entp_codes and (area_key == 0 or store.entpAreaCode == area_key) and (
+                        store_key == 0 or store_id == store_key):
+                    good_price_info = Product.getProductPriceInfoSvc(self.this_week, store_id, product_key)
+                    if good_price_info != 0:
+                        data_list.append({
+                            "area": s_area_detail_code[store.entpAreaCode],
+                            "store_name": store.entpName,
+                            "product_name": product_name,
+                            "price": f"{good_price_info.goodPrice}원",
+                            "entp_type_code": store.entpTypeCode
+                        })
+                        results_tree.insert("", "end", values=(
+                        s_area_detail_code[store.entpAreaCode], store.entpName, product_name,
+                        f"{good_price_info.goodPrice}원"))
+                        data_count += 1
+                        data_added = True
+        else:
+            for data in data_list:
+                if data["entp_type_code"] in selected_entp_codes:
+                    results_tree.insert("", "end",
+                                        values=(data["area"], data["store_name"], data["product_name"], data["price"]))
+                    data_count += 1
+                    data_added = True
+
+        # 데이터가 추가된 경우에만 라벨과 Treeview를 출력
+        if data_added:
+            # 행 높이를 설정
+            results_tree.configure(height=data_count)
+
+            product_label = tk.Label(scrollable_canvas_frame, text=product_name, font=("와구리체 TTF", 14), anchor="w",
+                                     justify="left")
+            product_label.pack(fill=tk.X, padx=10, pady=10)
+            results_tree.pack(fill=tk.BOTH, expand=True)
+
+        return data_list
+
+    def toggle_all_checkboxes(self, *args):
+        all_checked = self.entp_vars_goods["전체"].get()
+        for entp in self.entp_types_goods:
+            if entp != "전체":
+                self.entp_vars_goods[entp].set(all_checked)
+        self.update_stores_goods()
 
     def __init__(self):
         window = tk.Tk()
-        window.title('오늘 할 일 : 장 보기')
+        window.title('오늘 할 일 : 장보기')
 
         # self.today = datetime.date.today().strftime('%Y%m%d')
         self.today = '20220805'
@@ -547,7 +655,7 @@ class MainGUI:
         self.canvas.pack()
         self.canvas.create_rectangle(0, 0, W_WIDTH, W_HEIGHT, tags="background")
         self.canvas.create_line(280, 100, W_WIDTH - 280, 100, tags="title_line")
-        self.canvas.create_text(W_WIDTH / 2, 35, tags="title", text='오늘 할 일 : 장 보기', font=Title_font)
+        self.canvas.create_text(W_WIDTH / 2, 35, tags="title", text='오늘 할 일 : 장보기', font=Title_font)
 
         if random.randint(0, 1) == 0:
             self.canvas.create_text(W_WIDTH / 2, 75, tags="subtitle",
@@ -736,7 +844,7 @@ class MainGUI:
         entp_label_goods = tk.Label(filter_frame_goods, text="업태", font=("와구리체 TTF", 12))
         entp_label_goods.grid(row=1, column=0, padx=5, pady=5, sticky="w")
 
-        self.entp_types_goods = ["대형마트", "백화점", "편의점", "슈퍼마켓", "전통시장"]
+        self.entp_types_goods = ["편의점", "백화점", "대형마트", "슈퍼마켓", "전체"]
         self.entp_vars_goods = {entp: tk.BooleanVar() for entp in self.entp_types_goods}
         checkbox_frame1_goods = tk.Frame(filter_frame_goods)
         checkbox_frame1_goods.grid(row=1, column=1, columnspan=4, padx=5, pady=5, sticky="w")
@@ -755,6 +863,11 @@ class MainGUI:
             chk = tk.Checkbutton(checkbox_frame2_goods, text=entp, variable=self.entp_vars_goods[entp],
                                  command=self.update_stores_goods)
             chk.pack(side=tk.LEFT, padx=10)  # 간격을 동일하게 설정
+
+        # 전체 체크박스에 대한 이벤트 처리
+        self.entp_vars_goods["전체"].trace_add("write", self.toggle_all_checkboxes)
+
+
 
         # 지역 콤보박스
         area_label_goods = tk.Label(filter_frame_goods, text="지역", font=("와구리체 TTF", 12))
@@ -788,7 +901,7 @@ class MainGUI:
         item_label_goods.grid(row=6, column=0, padx=5, pady=5, sticky="w")
 
         self.item_combobox_goods = ttk.Combobox(filter_frame_goods, values=["전체"], style='TCombobox', width=15)
-        self.item_combobox_goods.set("전체")
+        self.item_combobox_goods.set("품목 선택")
         self.item_combobox_goods.grid(row=6, column=1, padx=5, pady=5, sticky="ew", columnspan=4)
 
         # 상품 콤보박스
@@ -796,14 +909,23 @@ class MainGUI:
         product_label_goods.grid(row=7, column=0, padx=5, pady=5, sticky="w")
 
         self.product_combobox_goods = ttk.Combobox(filter_frame_goods, values=["전체"], style='TCombobox', width=15)
-        self.product_combobox_goods.set("전체")
+        self.product_combobox_goods.set("상품 선택")
         self.product_combobox_goods.grid(row=7, column=1, padx=5, pady=5, sticky="ew", columnspan=4)
 
-        search_button_goods_img = Image.open("img/inquiry_cat.png")
-        search_button_goods_img = ImageTk.PhotoImage(search_button_goods_img)
 
-        self.search_button_goods = ttk.Button(filter_frame_goods, image=search_button_goods_img, command=self.search_product_price_info, width=10)
-        self.search_button_goods.grid(row=8, column=0, columnspan=5, padx=5, pady=5, sticky="ew", ipady=20)  # 전체 행을 덮도록 설정
+        # # 조회 버튼을 품목 콤보박스 오른쪽에 배치하고 높이를 늘림
+        # inquiry_image = Image.open("img/inquiry_cat.png")
+        # inquiry_image = ImageTk.PhotoImage(inquiry_image)
+        # self.search_button_goods = tk.Button(filter_frame_goods, image=inquiry_image, command=self.search_product_price_info, width=10)
+        # self.search_button_goods.image = inquiry_image  # 이미지가 가비지 컬렉션되지 않도록 참조를 유지
+        #
+        # self.search_button_goods.grid(row=7, column=0, columnspan=5, padx=5, pady=5, sticky="ew")  # 전체 행을 덮도록 설정
+
+        # 상품 조회 버튼
+        self.search_button_goods = ttk.Button(filter_frame_goods, text="조회", command=self.search_product_price_info,
+                                              style='TButton', width=10)
+        self.search_button_goods.grid(row=8, column=0, columnspan=5, padx=5, pady=5, sticky="ew",
+                                      ipady=20)  # 전체 행을 덮도록 설정
 
         # 각 열의 가중치를 동일하게 설정하여 너비를 맞춤
         filter_frame_goods.grid_columnconfigure(0, weight=1)
