@@ -140,7 +140,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <OutputFile>$(OutDir)\spam.pyd</OutputFile>
+      <OutputFile>$(OutDir)\average.pyd</OutputFile>
       <AdditionalLibraryDirectories>D:\Python\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>python311.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/export:PyInit_average %(AdditionalOptions)</AdditionalOptions>

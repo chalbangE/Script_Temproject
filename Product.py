@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as ET
 
 import requests
-
+import average
 
 class Product:
     def __init__(self, goodId=None, goodName=None, goodUnitDivCode=None, goodBaseCnt=None, goodSmlclsCode=None,
@@ -99,7 +99,7 @@ def CalAveragePrice(goodInspectDay=None, goodId=None):
     if len(price) == 0:
         return 0
     else:
-        return sum(price) // len(price)
+        return average.average(price)
 
 # print(CalAveragePrice("20220729", "168"))
 
