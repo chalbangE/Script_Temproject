@@ -10,6 +10,10 @@ from dateutil.relativedelta import relativedelta
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkintermapview import TkinterMapView
 
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
 import Product
 import Store
 
@@ -129,7 +133,39 @@ class MainGUI:
 
     def Send_Mail(self):
         query = self.text.get("1.0", "end-1c")  # 첫 번째 줄의 첫 번째 문자부터 마지막 줄의 마지막 문자까지의 텍스트 가져오기
-        print("Mail 전송 완료! : ", query)
+
+        # Example usage
+        sender_email = 'yan38829@gmail.com'
+        sender_password = 'skjlqxiojfchseke'
+        recipient_email = 'yan38829@gmail.com'
+        subject = '오늘 할 일 - 장 보기 메모!'
+
+        # Create a multipart message and set headers
+        message = MIMEMultipart()
+        message['From'] = sender_email
+        message['To'] = recipient_email
+        message['Subject'] = subject
+
+        # Add body to email
+        message.attach(MIMEText(query, 'plain'))
+
+        try:
+            # Connect to the Gmail SMTP server
+            server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+            server.ehlo()  # Can be omitted
+
+            # Login to the server
+            server.login(sender_email, sender_password)
+
+            # Send email
+            server.sendmail(sender_email, recipient_email, message.as_string())
+
+            # Quit the server
+            server.quit()
+
+            print("Mail 전송 완료! : ", query)
+        except Exception as e:
+            print(f'Failed to send email : {e}')
 
     def find_valid_day(self, goodInspectDay):
         while True:
