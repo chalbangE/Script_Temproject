@@ -79,6 +79,7 @@ def LoadTotalDivCode():
 
     return code_map
 
+# 평균 가격
 def CalAveragePrice(goodInspectDay=None, goodId=None):
     url = 'http://openapi.price.go.kr/openApiImpl/ProductPriceInfoService/getProductPriceInfoSvc.do'
     service_key = "bgABaHDCI6aMWSF9LIrvGAVSXbmEl193MNFLDhw+ndhs2/+TJ+PIq9J2DUn12Ei05O7fTEuSWxePGK8a7qfD0A=="

@@ -14,6 +14,10 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+import telepot
+from telepot.loop import MessageLoop
+import time
+
 import Product
 import Store
 
@@ -657,6 +661,32 @@ class MainGUI:
                 self.entp_vars_goods[entp].set(all_checked)
         self.update_stores_goods()
 
+    def Telebot_handle(self, msg):
+        content_type, chat_type, chat_id = telepot.glance(msg)
+
+        if content_type == 'text':
+            command = msg['text']
+
+            if command == '/start':
+                self.bot.sendMessage(chat_id, "안녕하세요! 어무니가 장 봐오라고 하셨군요! 제가 어느 정도가 평균 가격인지 알려드릴게요. 상품의 이름을 적어주세용! +^+")
+            elif command == '/help':
+                self.bot.sendMessage(chat_id, "상품 이름을 검색하면 평균 가격을 알려드릴게요!")
+            else:
+                if command in product_dic:
+                    price = Product.CalAveragePrice(self.this_week, product_dic[command].goodId)
+                    self.bot.sendMessage(chat_id, f'이 정도 가격에 구매하면 등짝을 지킬 수 있어요!  :  {price}원')
+                else:
+                    self.bot.sendMessage(chat_id, f'그런 상품은 없는데...')
+
+    def start_telegram_bot(self):
+        # 메시지 루프를 별도 스레드에서 실행
+        message_loop_thread = threading.Thread(target=self.run)
+        message_loop_thread.daemon = True
+        message_loop_thread.start()
+
+    def run(self):
+        MessageLoop(self.bot, self.Telebot_handle).run_forever()
+
     def __init__(self):
         window = tk.Tk()
         window.title('오늘 할 일 : 장보기')
@@ -985,11 +1015,19 @@ class MainGUI:
         # 지역 선택 이벤트 바인딩
         self.area_combobox_goods.bind("<<ComboboxSelected>>", self.update_stores_goods)
 
-        # 창 닫기 이벤트 처리
+        # 창 닫기 이벤트 처리++++++++++++++++
         window.protocol("WM_DELETE_WINDOW", self.on_closing)
 
-        ### 메인 루프 ###
+        TOKEN = '7214401654:AAGdAoPpFFksphZBmJp854c31yLRMAgmXSU'
 
+        # Create a bot instance
+        self.bot = telepot.Bot(TOKEN)
+
+        # Start the message loop
+        MessageLoop(self.bot, self.Telebot_handle).run_as_thread()
+
+
+        ### 메인 루프 ###
         self.window = window
         window.mainloop()
 
