@@ -134,10 +134,18 @@ class MainGUI:
     def Send_Mail(self):
         query = self.text.get("1.0", "end-1c")  # 첫 번째 줄의 첫 번째 문자부터 마지막 줄의 마지막 문자까지의 텍스트 가져오기
 
+        # Split the query into lines
+        lines = query.split('\n')
+
+        # The first line is the recipient's email
+        recipient_email = lines[0].strip()
+
+        # The rest of the lines are the email body
+        body = '\n'.join(lines[1:]).strip()
+
         # Example usage
         sender_email = 'yan38829@gmail.com'
         sender_password = 'skjlqxiojfchseke'
-        recipient_email = 'yan38829@gmail.com'
         subject = '오늘 할 일 - 장 보기 메모!'
 
         # Create a multipart message and set headers
@@ -147,7 +155,7 @@ class MainGUI:
         message['Subject'] = subject
 
         # Add body to email
-        message.attach(MIMEText(query, 'plain'))
+        message.attach(MIMEText(body, 'plain'))
 
         try:
             # Connect to the Gmail SMTP server
@@ -163,7 +171,7 @@ class MainGUI:
             # Quit the server
             server.quit()
 
-            print("Mail 전송 완료! : ", query)
+            print("Mail 전송 완료! : ", body)
         except Exception as e:
             print(f'Failed to send email : {e}')
 
